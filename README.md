@@ -4,7 +4,7 @@
 
 It offers a premium, responsive web interface with a dark theme (Dark Theme), focused on readability and interactivity of technical documents, containing native support for Markdown and interactive Mermaid diagram rendering.
 
-> This project is 
+> This project is only a simple developer tool, quickly created using Google's Antigravity and Gemini 3.5 Flash (Damn! This model is really fast and smart!) to help me navigate, view, and even edit files directly in MinIO buckets because its console interface is awful. Enjoy!
 ---
 
 ## Key Features
