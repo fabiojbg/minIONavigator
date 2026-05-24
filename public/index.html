@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MinIO Navigator</title>
+  <!-- Google Fonts: Inter and Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind is not used - Custom premium CSS is in style.css -->
+  <link rel="stylesheet" href="/style.css">
+  
+  <!-- Lucide Icons via CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Marked for Markdown Parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <!-- DOMPurify to sanitize HTML -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
+  
+  <!-- Mermaid for Diagram Rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+  
+  <!-- @panzoom/panzoom for SVG diagram pan & zoom -->
+  <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <i data-lucide="compass" class="brand-icon"></i>
+          <span>MinIO Navigator</span>
+        </div>
+        <button id="refresh-btn" class="icon-btn" title="Refresh Tree">
+          <i data-lucide="refresh-cw"></i>
+        </button>
+      </div>
+      
+      <!-- Current Bucket Banner (if default bucket is configured) -->
+      <div class="bucket-info" id="bucket-info">
+        <i data-lucide="database" class="bucket-icon"></i>
+        <span class="bucket-name" id="current-bucket-name">Loading...</span>
+      </div>
+
+      <!-- Treeview Container -->
+      <div class="tree-container" id="tree-container">
+        <!-- Dynamic nodes will be injected here -->
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <span>Carregando arquivos...</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Resizable Splitter -->
+    <div class="splitter" id="splitter">
+      <div class="splitter-handle"></div>
+    </div>
+
+    <!-- Main File Viewer -->
+    <main class="viewer-container" id="viewer-container">
+      <!-- File Metadata Header -->
+      <header class="viewer-header" id="viewer-header" style="display: none;">
+        <div class="file-meta">
+          <i data-lucide="file" class="file-icon" id="header-file-icon"></i>
+          <div class="file-details">
+            <h1 class="file-name" id="header-file-name">filename.md</h1>
+            <span class="file-path" id="header-file-path">path/to/filename.md</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <span class="file-size-badge" id="header-file-size">0 KB</span>
+          <button id="raw-btn" class="btn btn-secondary" title="View Raw File Content">
+            <i data-lucide="external-link"></i>
+            <span>Raw</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Dynamic content viewport -->
+      <div class="viewer-content" id="viewer-content">
+        <!-- Welcome Screen (Default) -->
+        <div class="welcome-screen" id="welcome-screen">
+          <div class="welcome-card">
+            <i data-lucide="folder-search" class="welcome-logo"></i>
+            <h2>MinIO File Navigator</h2>
+            <p>Selecione um arquivo suportado na barra lateral para visualizar seu conteúdo.</p>
+            <div class="supported-formats">
+              <span class="format-tag"><i data-lucide="file-text"></i> Markdown (.md)</span>
+              <span class="format-tag"><i data-lucide="code"></i> JSON (.json)</span>
+              <span class="format-tag"><i data-lucide="align-left"></i> Texto (.txt)</span>
+            </div>
+            <div class="instructions">
+              <div class="instruction-step">
+                <span class="step-num">1</span>
+                <span><strong>Duplo clique</strong> nas pastas no sidebar para expandi-las ou recolhê-las.</span>
+              </div>
+              <div class="instruction-step">
+                <span class="step-num">2</span>
+                <span><strong>Clique único</strong> em um arquivo suportado para carregá-lo no visualizador.</span>
+              </div>
+              <div class="instruction-step">
+                <span class="step-num">3</span>
+                <span><strong>Clique em um diagrama Mermaid</strong> para abrir no modo interativo de Pan e Zoom.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Render views (hidden initially) -->
+        <div class="view-body markdown-body" id="markdown-view" style="display: none;"></div>
+        <div class="view-body text-body" id="text-view" style="display: none;">
+          <pre><code id="text-content"></code></pre>
+        </div>
+        <div class="view-body error-body" id="error-view" style="display: none;">
+          <i data-lucide="alert-triangle" class="error-icon"></i>
+          <h3 id="error-title">Erro ao Carregar</h3>
+          <p id="error-message">Não foi possível carregar o arquivo selecionado.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Mermaid Pan & Zoom Modal Overlay -->
+  <div class="modal" id="mermaid-modal" style="display: none;">
+    <div class="modal-backdrop" id="modal-backdrop"></div>
+    <div class="modal-window">
+      <header class="modal-header">
+        <span class="modal-title"><i data-lucide="git-branch"></i> Diagrama Mermaid Interativo</span>
+        <div class="modal-controls">
+          <button id="zoom-in-btn" class="icon-btn modal-btn" title="Zoom In">
+            <i data-lucide="zoom-in"></i>
+          </button>
+          <button id="zoom-out-btn" class="icon-btn modal-btn" title="Zoom Out">
+            <i data-lucide="zoom-out"></i>
+          </button>
+          <button id="zoom-reset-btn" class="icon-btn modal-btn" title="Reset Zoom & Pan">
+            <i data-lucide="maximize"></i>
+          </button>
+          <button id="modal-close-btn" class="icon-btn modal-btn close-btn" title="Close Modal">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+      </header>
+      <div class="modal-body" id="modal-body">
+        <div class="panzoom-container" id="panzoom-container">
+          <div id="modal-diagram-target"></div>
+        </div>
+        <div class="modal-instructions">
+          <i data-lucide="info" class="info-icon"></i>
+          <span>Use a rodinha do mouse para fazer zoom e clique + arraste para navegar pelo diagrama.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App script logic -->
+  <script src="/app.js"></script>
+</body>
+</html>
