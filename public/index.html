@@ -26,6 +26,29 @@
   
   <!-- @panzoom/panzoom for SVG diagram pan & zoom -->
   <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+
+  <!-- CodeMirror CSS & Themes -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/material-darker.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/nord.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/eclipse.min.css">
+
+  <!-- CodeMirror JS & Modes -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/markdown/markdown.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/yaml/yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
+
+  <!-- Highlight.js for Markdown Code Block syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
 
@@ -76,6 +99,10 @@
         </div>
         <div class="header-actions">
           <span class="file-size-badge" id="header-file-size">0 KB</span>
+          <button id="edit-btn" class="btn btn-secondary" title="Editar este arquivo" style="display: none;">
+            <i data-lucide="edit-3"></i>
+            <span>Editar</span>
+          </button>
           <button id="raw-btn" class="btn btn-secondary" title="View Raw File Content">
             <i data-lucide="external-link"></i>
             <span>Raw</span>
@@ -116,7 +143,7 @@
         <!-- Render views (hidden initially) -->
         <div class="view-body markdown-body" id="markdown-view" style="display: none;"></div>
         <div class="view-body text-body" id="text-view" style="display: none;">
-          <pre><code id="text-content"></code></pre>
+          <div id="text-viewer-editor-container"></div>
         </div>
         <div class="view-body error-body" id="error-view" style="display: none;">
           <i data-lucide="alert-triangle" class="error-icon"></i>
@@ -157,6 +184,73 @@
           <span>Use a rodinha do mouse para fazer zoom e clique + arraste para navegar pelo diagrama.</span>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Edit File Modal Overlay -->
+  <div class="modal" id="edit-modal" style="display: none;">
+    <div class="modal-backdrop" id="edit-modal-backdrop"></div>
+    <div class="modal-window edit-modal-window">
+      <header class="modal-header">
+        <span class="modal-title"><i data-lucide="edit-3"></i> Editar Arquivo</span>
+        <div class="modal-meta-info" style="display: flex; flex-direction: column; margin-left: 20px; flex-grow: 1; min-width: 0;">
+          <span class="edit-file-name" id="edit-file-name" style="font-weight: 600; font-size: 0.9rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">filename.md</span>
+          <span class="edit-file-path" id="edit-file-path" style="font-size: 0.7rem; color: var(--text-secondary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">bucket/path/to/filename.md</span>
+        </div>
+        <div class="modal-controls">
+          <div class="theme-selector-container">
+            <label for="editor-theme-select"><i data-lucide="palette"></i> Tema:</label>
+            <select id="editor-theme-select" class="theme-select">
+              <option value="dracula" selected>Dracula</option>
+              <option value="monokai">Monokai</option>
+              <option value="material-darker">Material Darker</option>
+              <option value="nord">Nord</option>
+              <option value="eclipse">Eclipse</option>
+            </select>
+          </div>
+          <button id="edit-save-btn" class="btn btn-primary" title="Salvar Alterações">
+            <i data-lucide="save"></i>
+            <span>Salvar</span>
+          </button>
+          <button id="edit-close-btn" class="icon-btn modal-btn close-btn" title="Fechar Sem Salvar">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+      </header>
+      <div class="modal-body edit-modal-body">
+        <textarea id="editor-textarea"></textarea>
+      </div>
+      <footer class="modal-footer" id="edit-modal-footer">
+        <span class="save-status" id="save-status"></span>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal" id="delete-modal" style="display: none;">
+    <div class="modal-backdrop" id="delete-modal-backdrop"></div>
+    <div class="modal-window small-modal-window">
+      <header class="modal-header">
+        <span class="modal-title" style="color: var(--error-red); display: flex; align-items: center; gap: 8px;"><i data-lucide="trash-2"></i> Confirmar Exclusão</span>
+        <button id="delete-close-btn" class="icon-btn modal-btn close-btn" title="Fechar">
+          <i data-lucide="x"></i>
+        </button>
+      </header>
+      <div class="modal-body" style="padding: 24px; gap: 16px; display: flex; flex-direction: column;">
+        <p>Tem certeza de que deseja excluir permanentemente o seguinte item?</p>
+        <div class="delete-item-info" style="display: flex; align-items: center; gap: 10px; background-color: var(--bg-card); padding: 12px; border: 1px solid var(--border-color); border-radius: 6px;">
+          <i id="delete-item-icon" data-lucide="file" style="color: var(--accent-blue);"></i>
+          <span id="delete-item-path" style="font-family: var(--font-mono); font-size: 0.85rem; word-break: break-all;">bucket/path/to/file.txt</span>
+        </div>
+        <div class="warning-text" id="delete-warning-text" style="color: var(--warning-yellow); display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500;">
+          <i data-lucide="alert-triangle"></i>
+          <span>Esta ação não pode ser desfeita!</span>
+        </div>
+      </div>
+      <footer class="modal-footer" style="padding: 16px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 12px; background-color: var(--bg-sidebar);">
+        <button id="delete-cancel-btn" class="btn btn-secondary">Cancelar</button>
+        <button id="delete-confirm-btn" class="btn btn-danger" style="background-color: var(--error-red); border: 1px solid var(--error-red); color: white;">Excluir</button>
+      </footer>
     </div>
   </div>
 

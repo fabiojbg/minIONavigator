@@ -4,6 +4,7 @@ const Minio = require('minio');
 const path = require('path');
 
 const app = express();
+app.use(express.json()); // support json encoded bodies
 const PORT = process.env.PORT || 4000;
 
 // Parse MinIO Connection config
@@ -166,6 +167,87 @@ app.get('/api/file', async (req, res) => {
   } catch (err) {
     console.error(`Error retrieving object ${filePath}:`, err);
     res.status(404).send('File not found: ' + err.message);
+  }
+});
+
+// Helper to delete folder (prefix) recursively
+function deletePrefixRecursively(bucket, prefix) {
+  return new Promise((resolve, reject) => {
+    const objectsList = [];
+    const stream = minioClient.listObjectsV2(bucket, prefix, true);
+    
+    stream.on('data', (obj) => {
+      if (obj.name) {
+        objectsList.push(obj.name);
+      }
+    });
+    
+    stream.on('error', (err) => {
+      reject(err);
+    });
+    
+    stream.on('end', async () => {
+      try {
+        if (objectsList.length > 0) {
+          await minioClient.removeObjects(bucket, objectsList);
+        }
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
+}
+
+// Endpoint to delete a file or folder recursively
+app.delete('/api/file', async (req, res) => {
+  const bucket = req.query.bucket || defaultBucket;
+  const filePath = req.query.path;
+  const isDir = req.query.isDir === 'true';
+
+  if (!bucket) {
+    return res.status(400).send('Bucket is required');
+  }
+  if (!filePath) {
+    return res.status(400).send('Path is required');
+  }
+
+  try {
+    if (isDir) {
+      // Ensure folder path ends with '/' for safety
+      const folderPrefix = filePath.endsWith('/') ? filePath : filePath + '/';
+      await deletePrefixRecursively(bucket, folderPrefix);
+      res.json({ success: true, message: `Folder ${folderPrefix} deleted recursively` });
+    } else {
+      await minioClient.removeObject(bucket, filePath);
+      res.json({ success: true, message: `File ${filePath} deleted` });
+    }
+  } catch (err) {
+    console.error(`Error deleting object ${filePath}:`, err);
+    res.status(500).json({ error: 'Failed to delete: ' + err.message });
+  }
+});
+
+// Endpoint to save file content
+app.post('/api/save', express.json({ limit: '10mb' }), async (req, res) => {
+  const bucket = req.body.bucket || defaultBucket;
+  const filePath = req.body.path;
+  const content = req.body.content;
+
+  if (!bucket) {
+    return res.status(400).send('Bucket is required');
+  }
+  if (!filePath) {
+    return res.status(400).send('Path is required');
+  }
+
+  try {
+    const buffer = Buffer.from(content || '', 'utf-8');
+    await minioClient.putObject(bucket, filePath, buffer);
+    res.json({ success: true, message: `File ${filePath} saved successfully` });
+  } catch (err) {
+    console.error(`Error saving object ${filePath}:`, err);
+    res.status(500).json({ error: 'Failed to save: ' + err.message });
   }
 });
 

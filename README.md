@@ -11,9 +11,12 @@ Ele oferece uma interface web premium, responsiva e com tema escuro (Dark Theme)
 - **Sidebar Treeview Dinâmico (Lazy-Loaded)**: Carrega pastas sob demanda conforme o usuário navega. Pastas são exibidas antes dos arquivos e tudo é ordenado alfabeticamente.
 - **Divisor Flexível (Splitter)**: Permite ajustar a largura da barra lateral de navegação arrastando a borda com o mouse.
 - **Visualizador de Arquivos Extensível**:
-  - **Markdown (`.md`)**: Renderizado em HTML limpo e seguro (via `marked` e `DOMPurify`).
-  - **Texto / Código (`.txt`, `.json`, `.yml`, etc.)**: Visualizador formatado com fontes monoespaçadas.
+  - **Markdown (`.md`)**: Renderizado em HTML limpo e seguro (via `marked` e `DOMPurify`), com realce de sintaxe nos blocos de código via **Highlight.js**.
+  - **Texto / Código (`.txt`, `.json`, `.yml`, etc.)**: Visualizador premium com linhas numeradas e realce de sintaxe via **CodeMirror 5** (modo somente leitura).
   - **Arquivos Não Suportados**: Exibição de mensagem informativa com link direto de download/visualização do conteúdo bruto.
+- **Gerenciamento Seguro de Arquivos**:
+  - **Edição em Popup**: Permite editar arquivos de texto/markdown diretamente em um popup/modal usando CodeMirror. Inclui dropdown com suporte a 5 temas de cores (*Dracula*, *Monokai*, *Material Darker*, *Nord*, *Eclipse*) persistidos no `localStorage`.
+  - **Exclusão**: Permite excluir permanentemente arquivos ou pastas recursivamente direto no sidebar (com modal de confirmação para prevenir acidentes).
 - **Diagramas Mermaid Interativos**:
   - Renderiza blocos de código ` ```mermaid ` diretamente como SVG no corpo do documento.
   - Ao clicar no diagrama, abre um **popup em tela cheia** com recursos avançados de **Pan (arrastar)** e **Zoom (roda do mouse)** utilizando a biblioteca `Panzoom`.

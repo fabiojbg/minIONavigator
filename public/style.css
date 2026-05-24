@@ -883,3 +883,179 @@ body {
   width: 14px;
   height: 14px;
 }
+
+/* --- Actions on Tree Nodes --- */
+.tree-node .node-actions {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding-left: 8px;
+  z-index: 5;
+}
+
+.tree-node:hover .node-actions {
+  display: flex;
+}
+
+.node-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.node-action-btn:hover {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+}
+
+.node-action-btn.delete:hover {
+  color: var(--error-red);
+  background-color: rgba(248, 81, 73, 0.1);
+}
+
+.node-action-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* --- Edit File Modal Layout --- */
+.edit-modal-window {
+  width: 90vw;
+  height: 85vh;
+  max-width: 1200px;
+}
+
+.edit-modal-body {
+  padding: 0 !important; /* CodeMirror will touch the edges */
+  flex-grow: 1;
+  position: relative;
+  overflow: hidden;
+  height: calc(85vh - 110px); /* header 50px + footer 60px approx */
+}
+
+/* Modal Footer */
+.modal-footer {
+  height: 50px;
+  padding: 0 20px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-sidebar);
+  flex-shrink: 0;
+  font-size: 0.85rem;
+}
+
+.save-status {
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.save-status.success {
+  color: var(--success-green);
+}
+
+.save-status.error {
+  color: var(--error-red);
+}
+
+/* Theme selector styling in header */
+.theme-selector-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-right: 12px;
+}
+
+.theme-select {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  outline: none;
+  font-size: 0.8rem;
+}
+
+.theme-select:focus {
+  border-color: var(--accent-blue);
+}
+
+/* --- Primary Button --- */
+.btn-primary {
+  background-color: var(--accent-blue);
+  color: white;
+  border: 1px solid var(--accent-blue);
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn-danger {
+  background-color: var(--error-red);
+  border: 1px solid var(--error-red);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #d12d26;
+  border-color: #d12d26;
+}
+
+/* --- CodeMirror Premium Adjustments --- */
+.CodeMirror {
+  font-family: var(--font-mono) !important;
+  font-size: 0.9rem !important;
+  height: 100% !important;
+  width: 100% !important;
+  line-height: 1.5 !important;
+}
+
+/* Override dark background for editor text area scroll area */
+.CodeMirror-gutter {
+  background-color: var(--bg-sidebar) !important;
+  border-right: 1px solid var(--border-color) !important;
+}
+
+/* Text viewer CodeMirror container */
+#text-viewer-editor-container {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#text-viewer-editor-container .CodeMirror {
+  height: 600px !important; /* fixed high container for view */
+}
+
+/* --- Small modal window styling --- */
+.small-modal-window {
+  width: 90vw;
+  max-width: 500px;
+  height: auto;
+  min-height: 250px;
+}
+
+/* Adjust text-body padding for full width editor view */
+.text-body {
+  max-width: 100%;
+  padding: 24px;
+  height: 100%;
+}

@@ -1,6 +1,9 @@
 // Application State
 let currentBucket = '';
 let isResizing = false;
+let currentViewerEditor = null;
+let editEditorInstance = null;
+let activeFileMeta = null;
 
 // Extensible Viewer Registry
 const viewers = [
@@ -24,6 +27,13 @@ const viewers = [
       
       // Post-process and render Mermaid diagrams
       await renderMermaidDiagrams(container);
+
+      // Syntax highlight other code blocks using Highlight.js
+      container.querySelectorAll('pre code').forEach((el) => {
+        if (!el.classList.contains('language-mermaid') && !el.classList.contains('mermaid')) {
+          hljs.highlightElement(el);
+        }
+      });
     }
   },
   {
@@ -38,21 +48,39 @@ const viewers = [
       if (!res.ok) throw new Error(`Não foi possível carregar o arquivo de texto (${res.statusText})`);
       const text = await res.text();
       
-      const codeEl = container.querySelector('#text-content');
-      if (codeEl) {
-        // Formata JSON de forma legível
-        const ext = path.split('.').pop().toLowerCase();
-        if (ext === 'json') {
-          try {
-            const jsonVal = JSON.parse(text);
-            codeEl.textContent = JSON.stringify(jsonVal, null, 2);
-          } catch (e) {
-            codeEl.textContent = text;
-          }
-        } else {
-          codeEl.textContent = text;
+      container.innerHTML = '<div id="text-viewer-editor-container"></div>';
+      const editorContainer = container.querySelector('#text-viewer-editor-container');
+      
+      const ext = path.split('.').pop().toLowerCase();
+      let mode = 'text/plain';
+      if (ext === 'json') mode = 'application/json';
+      else if (ext === 'js') mode = 'javascript';
+      else if (ext === 'py') mode = 'python';
+      else if (ext === 'html') mode = 'htmlmixed';
+      else if (ext === 'css') mode = 'css';
+      else if (ext === 'yaml' || ext === 'yml') mode = 'yaml';
+      else if (ext === 'xml') mode = 'xml';
+      else if (ext === 'md') mode = 'markdown';
+      
+      let displayContent = text;
+      if (ext === 'json') {
+        try {
+          displayContent = JSON.stringify(JSON.parse(text), null, 2);
+        } catch (e) {
+          // Keep raw
         }
       }
+      
+      const activeTheme = localStorage.getItem('minio-editor-theme') || 'dracula';
+      
+      currentViewerEditor = CodeMirror(editorContainer, {
+        value: displayContent,
+        mode: mode,
+        theme: activeTheme,
+        lineNumbers: true,
+        readOnly: 'nocursor',
+        lineWrapping: true
+      });
     }
   }
 ];
@@ -79,6 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initSplitter();
   initTreeview();
   initModal();
+  initEditModal();
+  initDeleteModal();
   lucide.createIcons();
 });
 
@@ -109,6 +139,9 @@ function initSplitter() {
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
       splitter.classList.remove('active');
+      if (currentViewerEditor) {
+        currentViewerEditor.refresh();
+      }
     }
   });
 }
@@ -251,6 +284,50 @@ function createNodeElement(item, depth) {
   label.textContent = item.name;
   node.appendChild(label);
 
+  // Botões de Ação Rápida (Excluir e Editar) - não mostrar para buckets
+  if (!item.isBucket) {
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'node-actions';
+
+    // Se for arquivo editável, mostra botão de edição
+    if (!item.isDir) {
+      const ext = item.name.split('.').pop().toLowerCase();
+      const isEditable = ['md', 'txt', 'json', 'log', 'xml', 'js', 'py', 'html', 'css', 'yaml', 'yml', 'env', 'conf', 'ini'].includes(ext);
+      if (isEditable) {
+        const editAction = document.createElement('button');
+        editAction.className = 'node-action-btn edit';
+        editAction.title = 'Editar';
+        editAction.innerHTML = '<i data-lucide="edit-3"></i>';
+        editAction.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const url = `/api/file?bucket=${encodeURIComponent(item.bucket)}&path=${encodeURIComponent(item.path)}`;
+          try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`Erro ao buscar arquivo: ${res.statusText}`);
+            const content = await res.text();
+            openEditModal(item.bucket, item.path, item.name, content);
+          } catch (err) {
+            alert(err.message);
+          }
+        });
+        actionsContainer.appendChild(editAction);
+      }
+    }
+
+    // Botão de excluir para arquivo ou pasta
+    const deleteAction = document.createElement('button');
+    deleteAction.className = 'node-action-btn delete';
+    deleteAction.title = 'Excluir';
+    deleteAction.innerHTML = '<i data-lucide="trash-2"></i>';
+    deleteAction.addEventListener('click', (e) => {
+      e.stopPropagation();
+      promptDelete(node);
+    });
+    actionsContainer.appendChild(deleteAction);
+
+    node.appendChild(actionsContainer);
+  }
+
   wrapper.appendChild(node);
 
   if (item.isDir) {
@@ -384,6 +461,19 @@ async function loadFile(bucket, path, name, size, lastModified) {
   headerSize.textContent = sizeText;
   header.style.display = 'flex';
 
+  // Store active file metadata
+  activeFileMeta = { bucket, path, name, size, lastModified };
+
+  // Set file-specific icon and edit button visibility
+  const editBtn = document.getElementById('edit-btn');
+  const ext = name.split('.').pop().toLowerCase();
+  const isEditable = ['md', 'txt', 'json', 'log', 'xml', 'js', 'py', 'html', 'css', 'yaml', 'yml', 'env', 'conf', 'ini'].includes(ext);
+  if (isEditable) {
+    editBtn.style.display = 'inline-flex';
+  } else {
+    editBtn.style.display = 'none';
+  }
+
   // Config Raw file link opening
   rawBtn.onclick = () => {
     window.open(`/api/file?bucket=${encodeURIComponent(bucket)}&path=${encodeURIComponent(path)}`, '_blank');
@@ -391,7 +481,6 @@ async function loadFile(bucket, path, name, size, lastModified) {
 
   // Set file-specific icon
   const headerIcon = document.getElementById('header-file-icon');
-  const ext = name.split('.').pop().toLowerCase();
   headerIcon.removeAttribute('data-lucide');
   if (ext === 'md') {
     headerIcon.setAttribute('data-lucide', 'file-text');
@@ -410,7 +499,8 @@ async function loadFile(bucket, path, name, size, lastModified) {
   
   // Clean views
   markdownView.innerHTML = '';
-  document.getElementById('text-content').textContent = '';
+  textView.innerHTML = '';
+  currentViewerEditor = null;
 
   // Match registered viewers
   const viewer = viewers.find(v => v.test(name)) || fallbackViewer;
@@ -427,8 +517,13 @@ async function loadFile(bucket, path, name, size, lastModified) {
       await viewer.render(bucket, path, markdownView);
       markdownView.style.display = 'block';
     } else if (viewer.name === 'Text/JSON') {
-      await viewer.render(bucket, path, textView);
       textView.style.display = 'block';
+      await viewer.render(bucket, path, textView);
+      if (currentViewerEditor) {
+        setTimeout(() => {
+          currentViewerEditor.refresh();
+        }, 50);
+      }
     } else {
       await viewer.render(bucket, path, markdownView); // standard fallback target
       markdownView.style.display = 'block';
@@ -588,5 +683,233 @@ async function openMermaidModal(diagramText) {
       </div>
     `;
     lucide.createIcons();
+  }
+}
+
+/* Edit File Modal logic */
+function initEditModal() {
+  const modal = document.getElementById('edit-modal');
+  const closeBtn = document.getElementById('edit-close-btn');
+  const backdrop = document.getElementById('edit-modal-backdrop');
+  const themeSelect = document.getElementById('editor-theme-select');
+  
+  const closeModal = () => {
+    modal.style.display = 'none';
+  };
+  
+  closeBtn.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', closeModal);
+  
+  themeSelect.addEventListener('change', (e) => {
+    const newTheme = e.target.value;
+    localStorage.setItem('minio-editor-theme', newTheme);
+    
+    if (editEditorInstance) {
+      editEditorInstance.setOption('theme', newTheme);
+    }
+    if (currentViewerEditor) {
+      currentViewerEditor.setOption('theme', newTheme);
+    }
+  });
+
+  const editBtn = document.getElementById('edit-btn');
+  editBtn.addEventListener('click', async () => {
+    if (!activeFileMeta) return;
+    const { bucket, path, name } = activeFileMeta;
+    
+    const url = `/api/file?bucket=${encodeURIComponent(bucket)}&path=${encodeURIComponent(path)}`;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Erro ao buscar arquivo: ${res.statusText}`);
+      const content = await res.text();
+      openEditModal(bucket, path, name, content);
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+}
+
+function openEditModal(bucket, path, filename, content) {
+  const modal = document.getElementById('edit-modal');
+  document.getElementById('edit-file-name').textContent = filename;
+  document.getElementById('edit-file-path').textContent = `${bucket}/${path}`;
+  
+  const ext = filename.split('.').pop().toLowerCase();
+  let mode = 'text/plain';
+  if (ext === 'json') mode = 'application/json';
+  else if (ext === 'js') mode = 'javascript';
+  else if (ext === 'py') mode = 'python';
+  else if (ext === 'html') mode = 'htmlmixed';
+  else if (ext === 'css') mode = 'css';
+  else if (ext === 'yaml' || ext === 'yml') mode = 'yaml';
+  else if (ext === 'xml') mode = 'xml';
+  else if (ext === 'md') mode = 'markdown';
+  
+  const activeTheme = localStorage.getItem('minio-editor-theme') || 'dracula';
+  document.getElementById('editor-theme-select').value = activeTheme;
+  
+  const textarea = document.getElementById('editor-textarea');
+  modal.style.display = 'flex';
+  
+  if (!editEditorInstance) {
+    editEditorInstance = CodeMirror.fromTextArea(textarea, {
+      lineNumbers: true,
+      lineWrapping: true,
+      theme: activeTheme,
+      mode: mode
+    });
+  } else {
+    editEditorInstance.setValue(content);
+    editEditorInstance.setOption('mode', mode);
+    editEditorInstance.setOption('theme', activeTheme);
+  }
+  
+  setTimeout(() => {
+    editEditorInstance.refresh();
+  }, 100);
+  
+  const saveBtn = document.getElementById('edit-save-btn');
+  const saveStatus = document.getElementById('save-status');
+  saveStatus.textContent = '';
+  saveStatus.className = 'save-status';
+  
+  saveBtn.onclick = async () => {
+    const updatedContent = editEditorInstance.getValue();
+    saveStatus.textContent = 'Salvando...';
+    saveStatus.className = 'save-status';
+    
+    try {
+      const res = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bucket, path, content: updatedContent })
+      });
+      
+      if (!res.ok) throw new Error(await res.text() || 'Failed to save');
+      
+      saveStatus.textContent = 'Arquivo salvo com sucesso!';
+      saveStatus.className = 'save-status success';
+      
+      await loadFile(bucket, path, filename, updatedContent.length, new Date().toISOString());
+      
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 800);
+      
+    } catch (err) {
+      saveStatus.textContent = 'Erro ao salvar: ' + err.message;
+      saveStatus.className = 'save-status error';
+    }
+  };
+}
+
+/* Delete File/Folder logic */
+let nodeToDelete = null;
+
+function initDeleteModal() {
+  const modal = document.getElementById('delete-modal');
+  const closeBtn = document.getElementById('delete-close-btn');
+  const cancelBtn = document.getElementById('delete-cancel-btn');
+  const backdrop = document.getElementById('delete-modal-backdrop');
+  const confirmBtn = document.getElementById('delete-confirm-btn');
+  
+  const closeModal = () => {
+    modal.style.display = 'none';
+    nodeToDelete = null;
+  };
+  
+  closeBtn.addEventListener('click', closeModal);
+  cancelBtn.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', closeModal);
+  
+  confirmBtn.addEventListener('click', async () => {
+    if (!nodeToDelete) return;
+    
+    const path = nodeToDelete.dataset.path;
+    const bucket = nodeToDelete.dataset.bucket;
+    const isDir = nodeToDelete.dataset.isDir === 'true';
+    
+    try {
+      const res = await fetch(`/api/file?bucket=${encodeURIComponent(bucket)}&path=${encodeURIComponent(path)}&isDir=${isDir}`, {
+        method: 'DELETE'
+      });
+      
+      if (!res.ok) throw new Error(await res.text() || 'Failed to delete');
+      
+      closeModal();
+      
+      if (activeFileMeta && activeFileMeta.bucket === bucket && activeFileMeta.path === path) {
+        resetViewerToWelcome();
+      }
+      
+      await refreshParentOfNode(nodeToDelete);
+      
+    } catch (err) {
+      alert('Erro ao excluir: ' + err.message);
+    }
+  });
+}
+
+function promptDelete(node) {
+  nodeToDelete = node;
+  const path = node.dataset.path;
+  const bucket = node.dataset.bucket;
+  const isDir = node.dataset.isDir === 'true';
+  
+  const modal = document.getElementById('delete-modal');
+  const pathSpan = document.getElementById('delete-item-path');
+  const icon = document.getElementById('delete-item-icon');
+  const warningText = document.getElementById('delete-warning-text');
+  
+  pathSpan.textContent = `${bucket}/${path}`;
+  
+  icon.removeAttribute('data-lucide');
+  if (isDir) {
+    icon.setAttribute('data-lucide', 'folder');
+    warningText.innerHTML = '<i data-lucide="alert-triangle"></i> Atenção: Isto excluirá recursivamente a pasta e todos os seus arquivos!';
+  } else {
+    icon.setAttribute('data-lucide', 'file');
+    warningText.innerHTML = '<i data-lucide="alert-triangle"></i> Esta ação não pode ser desfeita!';
+  }
+  
+  lucide.createIcons();
+  modal.style.display = 'flex';
+}
+
+function resetViewerToWelcome() {
+  activeFileMeta = null;
+  document.getElementById('viewer-header').style.display = 'none';
+  document.getElementById('welcome-screen').style.display = 'flex';
+  document.getElementById('markdown-view').style.display = 'none';
+  document.getElementById('text-view').style.display = 'none';
+  document.getElementById('error-view').style.display = 'none';
+  document.getElementById('edit-btn').style.display = 'none';
+}
+
+function getParentFolderNode(childNode) {
+  const parentChildrenDiv = childNode.closest('.tree-children');
+  if (parentChildrenDiv) {
+    return parentChildrenDiv.previousElementSibling;
+  }
+  return null;
+}
+
+async function refreshFolder(node) {
+  const childrenDiv = node.nextElementSibling;
+  if (childrenDiv && childrenDiv.classList.contains('tree-children')) {
+    childrenDiv.dataset.loaded = 'false';
+    childrenDiv.style.display = 'none';
+    const arrow = node.querySelector('.node-arrow');
+    if (arrow) arrow.classList.remove('expanded');
+    await toggleFolder(node, childrenDiv);
+  }
+}
+
+async function refreshParentOfNode(node) {
+  const parentNode = getParentFolderNode(node);
+  if (parentNode) {
+    await refreshFolder(parentNode);
+  } else {
+    await loadRootNodes();
   }
 }

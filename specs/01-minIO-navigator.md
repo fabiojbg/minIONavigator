@@ -68,6 +68,24 @@ O backend é construído em Node.js com o framework **Express** e utiliza a bibl
   - Resolve a extensão do arquivo e atribui o cabeçalho `Content-Type` apropriado (ex: `text/markdown`, `application/json`, `text/plain`).
   - Encaminha o stream diretamente para a resposta da requisição (`stream.pipe(res)`).
 
+#### 3. Excluir Objeto/Pasta: `DELETE /api/file`
+- **Parâmetros de Consulta (Query)**:
+  - `bucket` (obrigatório)
+  - `path` (obrigatório): O caminho ou prefixo virtual da pasta.
+  - `isDir` (obrigatório): `true` para diretórios virtuais (pastas), `false` para arquivos simples.
+- **Regras de Negócio**:
+  - Se `isDir` for `false`, aciona `removeObject` diretamente.
+  - Se `isDir` for `true`, realiza listagem recursiva de todas as chaves sob o prefixo e executa `removeObjects` em lote no MinIO para limpeza recursiva de subdiretórios.
+
+#### 4. Salvar Arquivo de Texto: `POST /api/save`
+- **Corpo da Requisição (JSON)**:
+  - `bucket` (obrigatório)
+  - `path` (obrigatório): O caminho do objeto.
+  - `content` (obrigatório): O conteúdo de texto atualizado.
+- **Regras de Negócio**:
+  - Converte a string de conteúdo recebida em um buffer UTF-8.
+  - Salva o arquivo no MinIO por meio do método `putObject` substituindo o arquivo anterior.
+
 ---
 
 ## 5. Arquitetura do Frontend (`public/`)
@@ -132,3 +150,13 @@ Quando um arquivo Markdown é renderizado:
 - Recebe o código bruto do diagrama do elemento clicado e reconstrói o SVG no modal.
 - Inicializa a biblioteca `Panzoom` no SVG gerado, vinculando a rolagem do mouse (`wheel`) ao controle de ampliação/redução e habilitando a navegação livre ao arrastar o mouse.
 - Oferece controles manuais rápidos: Zoom In, Zoom Out, Restaurar Zoom/Posição e Fechar.
+
+### 5.7 Realce de Sintaxe (Syntax Highlighting)
+A visualização de arquivos de texto e código utiliza mecanismos modernos de colorização:
+- **Visualizador Markdown (`.md`)**: Blocos de código internos são analisados pós-processamento e colorizados via biblioteca **Highlight.js** (ignoring Mermaid diagram nodes).
+- **Visualizador de Texto/Código (`.txt`, `.json`, `.py`, etc.)**: Utiliza um editor **CodeMirror 5** instanciado em modo somente leitura (`readOnly: 'nocursor'`), com suporte a temas e linhas numeradas. O modo é selecionado automaticamente baseado na extensão do arquivo.
+
+### 5.8 Gerenciamento de Arquivos
+A aplicação permite modificar e remover arquivos sob regras seguras:
+- **Edição de Texto**: Ocorre em um modal responsivo que carrega uma instância editável do CodeMirror. Permite alterar o conteúdo e alternar dinamicamente entre 5 opções de temas (*Dracula*, *Monokai*, *Material Darker*, *Nord*, *Eclipse*), gravando as preferências no `localStorage` do usuário. Ao salvar, as alterações são persistidas no backend e o painel de visualização é recarregado instantaneamente.
+- **Exclusão**: Acionada via botões de ação rápida (`.node-actions`) que aparecem no hover da árvore lateral (protegendo buckets principais). Exibe um modal de confirmação. Ao ser concluída com sucesso, recarrega cirurgicamente apenas o diretório pai afetado da árvore, preservando o estado de expansão de outros ramos. Se o arquivo deletado estiver sendo visualizado no painel de leitura, o sistema limpa a tela redirecionando para o card de boas-vindas.
