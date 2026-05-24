@@ -82,8 +82,15 @@ body {
 }
 
 @keyframes float-compass {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-3px) rotate(15deg); }
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-3px) rotate(15deg);
+  }
 }
 
 .icon-btn {
@@ -186,7 +193,8 @@ body {
 .tree-node.active {
   background-color: var(--accent-bg);
   border-left: 3px solid var(--accent-blue);
-  padding-left: 5px; /* adjust for border */
+  padding-left: 5px;
+  /* adjust for border */
 }
 
 .tree-node-indent {
@@ -259,8 +267,13 @@ body {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .node-loading {
@@ -271,8 +284,15 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Splitter Styling */
@@ -335,7 +355,8 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 0; /* allows child text ellipsis */
+  min-width: 0;
+  /* allows child text ellipsis */
 }
 
 .file-icon {
@@ -526,8 +547,15 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Plain text view */
@@ -571,10 +599,25 @@ body {
   color: var(--text-primary);
 }
 
-.markdown-body h1 { font-size: 1.8rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
-.markdown-body h2 { font-size: 1.4rem; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; }
-.markdown-body h3 { font-size: 1.2rem; }
-.markdown-body h4 { font-size: 1rem; }
+.markdown-body h1 {
+  font-size: 1.8rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+.markdown-body h2 {
+  font-size: 1.4rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 6px;
+}
+
+.markdown-body h3 {
+  font-size: 1.2rem;
+}
+
+.markdown-body h4 {
+  font-size: 1rem;
+}
 
 .markdown-body p,
 .markdown-body blockquote,
@@ -611,8 +654,13 @@ body {
   padding-left: 2em;
 }
 
-.markdown-body ul { list-style-type: disc; }
-.markdown-body ol { list-style-type: decimal; }
+.markdown-body ul {
+  list-style-type: disc;
+}
+
+.markdown-body ol {
+  list-style-type: decimal;
+}
 
 .markdown-body code {
   padding: 0.2em 0.4em;
@@ -687,6 +735,7 @@ body {
   transition: border-color 0.25s, transform 0.2s;
   overflow: hidden;
   max-width: 100%;
+  max-height: 500px;
 }
 
 .mermaid-container:hover {
@@ -696,6 +745,8 @@ body {
 
 .mermaid-container svg {
   max-width: 100% !important;
+  max-height: 460px !important;
+  width: auto !important;
   height: auto !important;
 }
 
@@ -750,8 +801,13 @@ body {
 }
 
 @keyframes fadeInBackdrop {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-window {
@@ -770,8 +826,15 @@ body {
 }
 
 @keyframes zoomInModal {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .modal-header {
@@ -934,11 +997,13 @@ body {
 }
 
 .edit-modal-body {
-  padding: 0 !important; /* CodeMirror will touch the edges */
+  padding: 0 !important;
+  /* CodeMirror will touch the edges */
   flex-grow: 1;
   position: relative;
   overflow: hidden;
-  height: calc(85vh - 110px); /* header 50px + footer 60px approx */
+  height: calc(85vh - 110px);
+  /* header 50px + footer 60px approx */
 }
 
 /* Modal Footer */
@@ -1042,7 +1107,8 @@ body {
 }
 
 #text-viewer-editor-container .CodeMirror {
-  height: 600px !important; /* fixed high container for view */
+  height: 600px !important;
+  /* fixed high container for view */
 }
 
 /* --- Small modal window styling --- */

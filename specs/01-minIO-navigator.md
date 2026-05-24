@@ -144,6 +144,7 @@ When a Markdown file is rendered:
 3. Replaces `<pre><code>` blocks with a `.mermaid-container` wrapper and saves the original mermaid code in the element's `data-diagram` attribute.
 4. Initializes Mermaid and triggers asynchronous rendering (`mermaid.render`), converting diagram text into an SVG injected into the viewport.
 5. Adds a click listener to the SVG. When clicked, the application opens the interactive modal panel.
+6. To prevent tall diagrams from stretching the Markdown document flow excessively, the inline `.mermaid-container` is capped at a maximum height of `500px` (`max-height: 400px`), and the SVG element is automatically scaled down proportionally to fit completely within this boundary (`max-height: 460px`). The user can click any diagram to open it in full resolution inside the interactive modal.
 
 ### 5.6 Interactive Modal (Zoom and Pan)
 - The modal fills almost the entire viewport with a blurred translucent background (`backdrop-filter`).
