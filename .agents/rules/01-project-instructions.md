@@ -2,17 +2,17 @@
 trigger: always_on
 ---
 
-O **MinIO Navigator** é um navegador e visualizador de arquivos leve para servidores MinIO locais (ou outros armazenamentos de objetos compatíveis com a API S3). 
+**MinIO Navigator** is a lightweight file browser and viewer for local MinIO servers (or other object storages compatible with the S3 API). 
 
-A aplicação foi projetada para resolver a visualização rápida e interativa de documentações técnicas de projetos (arquivos Markdown com diagramas Mermaid inclusos, arquivos de configuração JSON, arquivos de log e textos diversos) sem a necessidade de baixar os arquivos manualmente.
+The application is designed to provide quick and interactive viewing of project technical documentation (Markdown files with embedded Mermaid diagrams, JSON configuration files, log files, and various text files) without the need to download the files manually.
 
-## 1. Especificações do Projeto
-As especificações estão na pasta `specs/`. O prefixo numérico, como `01-` por exemplo, significa a ordem em que as especificações foram criadas
+## 1. Project Specifications
+The specifications are located in the `specs/` folder. The numeric prefix, such as `01-` for example, indicates the order in which the specifications were created.
 
-* **specs/01-minIO-navigator.md**: As especificações iniciais deste projeto.
+* **specs/01-minIO-navigator.md**: The initial specifications of this project.
 
-Estas espeficicações devem ser atualizadas sempre que alguma alteração exigir atualização nelas
+These specifications must be updated whenever any change requires them to be updated.
 
-## 5. Design e Documentação
-* Atualize o `README.md` sempre que necessário
+## 5. Design and Documentation
+* Update the `README.md` file whenever necessary.
 

@@ -13,7 +13,7 @@ const viewers = [
     render: async (bucket, path, container) => {
       const url = `/api/file?bucket=${encodeURIComponent(bucket)}&path=${encodeURIComponent(path)}`;
       const res = await fetch(url);
-      if (!res.ok) throw new Error(`Não foi possível carregar o arquivo markdown (${res.statusText})`);
+      if (!res.ok) throw new Error(`Could not load markdown file (${res.statusText})`);
       const text = await res.text();
       
       // Parse markdown to HTML
@@ -45,7 +45,7 @@ const viewers = [
     render: async (bucket, path, container) => {
       const url = `/api/file?bucket=${encodeURIComponent(bucket)}&path=${encodeURIComponent(path)}`;
       const res = await fetch(url);
-      if (!res.ok) throw new Error(`Não foi possível carregar o arquivo de texto (${res.statusText})`);
+      if (!res.ok) throw new Error(`Could not load text file (${res.statusText})`);
       const text = await res.text();
       
       container.innerHTML = '<div id="text-viewer-editor-container"></div>';
@@ -91,10 +91,10 @@ const fallbackViewer = {
     container.innerHTML = `
       <div class="error-body">
         <i data-lucide="file-warning" class="error-icon" style="color: var(--warning-yellow)"></i>
-        <h3>Visualização não suportada</h3>
-        <p>Este formato de arquivo não pode ser visualizado diretamente.</p>
+        <h3>Preview not supported</h3>
+        <p>This file format cannot be viewed directly.</p>
         <p style="font-size: 0.8rem; margin-top: 10px;">
-          Você pode abrir o conteúdo bruto em uma nova aba clicando no botão <strong>Raw</strong> acima.
+          You can open the raw content in a new tab by clicking the <strong>Raw</strong> button above.
         </p>
       </div>
     `;
@@ -165,7 +165,7 @@ async function loadRootNodes() {
   treeContainer.innerHTML = `
     <div class="loading-spinner">
       <div class="spinner"></div>
-      <span>Buscando raiz...</span>
+      <span>Fetching root...</span>
     </div>
   `;
 
@@ -177,15 +177,15 @@ async function loadRootNodes() {
     treeContainer.innerHTML = '';
     
     if (items.length === 0) {
-      treeContainer.innerHTML = `<div class="loading-spinner"><span>Nenhum bucket ou arquivo encontrado.</span></div>`;
-      bucketNameSpan.textContent = 'Nenhum bucket';
+      treeContainer.innerHTML = `<div class="loading-spinner"><span>No buckets or files found.</span></div>`;
+      bucketNameSpan.textContent = 'No buckets';
       return;
     }
 
     // Identifica se estamos em modo multi-bucket ou single-bucket padrão
     const firstItem = items[0];
     if (firstItem.isBucket) {
-      bucketNameSpan.textContent = 'Todos os Buckets';
+      bucketNameSpan.textContent = 'All Buckets';
       currentBucket = '';
     } else {
       currentBucket = firstItem.bucket;
@@ -205,12 +205,12 @@ async function loadRootNodes() {
     treeContainer.innerHTML = `
       <div class="error-body" style="padding: 20px;">
         <i data-lucide="alert-triangle" class="error-icon" style="width: 32px; height: 32px;"></i>
-        <h3>Erro de Conexão</h3>
-        <p style="font-size: 0.8rem;">Verifique se o MinIO está rodando e as credenciais no .env estão corretas.</p>
-        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="loadRootNodes()">Tentar novamente</button>
+        <h3>Connection Error</h3>
+        <p style="font-size: 0.8rem;">Ensure MinIO is running and the credentials in .env are correct.</p>
+        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="loadRootNodes()">Try again</button>
       </div>
     `;
-    bucketNameSpan.textContent = 'Erro';
+    bucketNameSpan.textContent = 'Error';
     lucide.createIcons();
   }
 }
@@ -296,14 +296,14 @@ function createNodeElement(item, depth) {
       if (isEditable) {
         const editAction = document.createElement('button');
         editAction.className = 'node-action-btn edit';
-        editAction.title = 'Editar';
+        editAction.title = 'Edit';
         editAction.innerHTML = '<i data-lucide="edit-3"></i>';
         editAction.addEventListener('click', async (e) => {
           e.stopPropagation();
           const url = `/api/file?bucket=${encodeURIComponent(item.bucket)}&path=${encodeURIComponent(item.path)}`;
           try {
             const res = await fetch(url);
-            if (!res.ok) throw new Error(`Erro ao buscar arquivo: ${res.statusText}`);
+            if (!res.ok) throw new Error(`Error fetching file: ${res.statusText}`);
             const content = await res.text();
             openEditModal(item.bucket, item.path, item.name, content);
           } catch (err) {
@@ -317,7 +317,7 @@ function createNodeElement(item, depth) {
     // Botão de excluir para arquivo ou pasta
     const deleteAction = document.createElement('button');
     deleteAction.className = 'node-action-btn delete';
-    deleteAction.title = 'Excluir';
+    deleteAction.title = 'Delete';
     deleteAction.innerHTML = '<i data-lucide="trash-2"></i>';
     deleteAction.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -390,7 +390,7 @@ async function toggleFolder(node, childrenDiv) {
         }
         
         const res = await fetch(url);
-        if (!res.ok) throw new Error(`Falha: ${res.statusText}`);
+        if (!res.ok) throw new Error(`Failed: ${res.statusText}`);
         const subItems = await res.json();
         
         childrenDiv.innerHTML = '';
@@ -402,7 +402,7 @@ async function toggleFolder(node, childrenDiv) {
           emptyDiv.style.color = 'var(--text-secondary)';
           emptyDiv.style.fontSize = '0.8rem';
           emptyDiv.style.fontStyle = 'italic';
-          emptyDiv.textContent = 'Pasta vazia';
+          emptyDiv.textContent = 'Empty folder';
           childrenDiv.appendChild(emptyDiv);
         } else {
           subItems.forEach(item => {
@@ -418,7 +418,7 @@ async function toggleFolder(node, childrenDiv) {
       } catch (err) {
         console.error('Erro ao expandir pasta:', err);
         arrow.innerHTML = originalArrowHTML;
-        alert('Não foi possível carregar os subdiretórios.');
+        alert('Could not load subdirectories.');
         return;
       }
     }
@@ -509,7 +509,7 @@ async function loadFile(bucket, path, name, size, lastModified) {
   const loader = document.createElement('div');
   loader.className = 'loading-spinner';
   loader.style.marginTop = '60px';
-  loader.innerHTML = '<div class="spinner"></div><span>Carregando arquivo...</span>';
+  loader.innerHTML = '<div class="spinner"></div><span>Loading file...</span>';
   document.getElementById('viewer-content').appendChild(loader);
 
   try {
@@ -530,7 +530,7 @@ async function loadFile(bucket, path, name, size, lastModified) {
     }
   } catch (err) {
     console.error('Erro de renderização:', err);
-    document.getElementById('error-title').textContent = 'Erro ao Carregar';
+    document.getElementById('error-title').textContent = 'Error Loading';
     document.getElementById('error-message').textContent = err.message;
     errorView.style.display = 'flex';
   } finally {
@@ -581,7 +581,7 @@ async function renderMermaidDiagrams(container) {
       // Exibe erro explicativo amigável no lugar do bloco
       block.element.innerHTML = `
         <div style="color: var(--error-red); padding: 12px; font-size: 0.8rem; font-family: var(--font-mono); border: 1px dashed var(--error-red); border-radius: 6px;">
-          <strong>[Erro no Diagrama Mermaid]</strong><br>${err.message}
+          <strong>[Mermaid Diagram Error]</strong><br>${err.message}
         </div>
       `;
       // Limpa qualquer classe que impeça renderizações futuras
@@ -640,7 +640,7 @@ async function openMermaidModal(diagramText) {
   target.innerHTML = `
     <div class="loading-spinner">
       <div class="spinner"></div>
-      <span>Processando diagrama...</span>
+      <span>Processing diagram...</span>
     </div>
   `;
   modal.style.display = 'flex';
@@ -674,12 +674,12 @@ async function openMermaidModal(diagramText) {
     });
 
   } catch (err) {
-    console.error('Erro ao processar modal do diagrama:', err);
+    console.error('Error processing diagram modal:', err);
     target.innerHTML = `
       <div class="error-body">
         <i data-lucide="alert-octagon" class="error-icon"></i>
-        <h3>Falha no Modal</h3>
-        <p>Não foi possível renderizar o diagrama interativo. (${err.message})</p>
+        <h3>Modal Failure</h3>
+        <p>Could not render the interactive diagram. (${err.message})</p>
       </div>
     `;
     lucide.createIcons();
@@ -720,7 +720,7 @@ function initEditModal() {
     const url = `/api/file?bucket=${encodeURIComponent(bucket)}&path=${encodeURIComponent(path)}`;
     try {
       const res = await fetch(url);
-      if (!res.ok) throw new Error(`Erro ao buscar arquivo: ${res.statusText}`);
+      if (!res.ok) throw new Error(`Error fetching file: ${res.statusText}`);
       const content = await res.text();
       openEditModal(bucket, path, name, content);
     } catch (err) {
@@ -775,7 +775,7 @@ function openEditModal(bucket, path, filename, content) {
   
   saveBtn.onclick = async () => {
     const updatedContent = editEditorInstance.getValue();
-    saveStatus.textContent = 'Salvando...';
+    saveStatus.textContent = 'Saving...';
     saveStatus.className = 'save-status';
     
     try {
@@ -787,7 +787,7 @@ function openEditModal(bucket, path, filename, content) {
       
       if (!res.ok) throw new Error(await res.text() || 'Failed to save');
       
-      saveStatus.textContent = 'Arquivo salvo com sucesso!';
+      saveStatus.textContent = 'File saved successfully!';
       saveStatus.className = 'save-status success';
       
       await loadFile(bucket, path, filename, updatedContent.length, new Date().toISOString());
@@ -797,7 +797,7 @@ function openEditModal(bucket, path, filename, content) {
       }, 800);
       
     } catch (err) {
-      saveStatus.textContent = 'Erro ao salvar: ' + err.message;
+      saveStatus.textContent = 'Error saving: ' + err.message;
       saveStatus.className = 'save-status error';
     }
   };
@@ -846,7 +846,7 @@ function initDeleteModal() {
       await refreshParentOfNode(nodeToRefresh);
       
     } catch (err) {
-      alert('Erro ao excluir: ' + err.message);
+      alert('Error deleting: ' + err.message);
     }
   });
 }
@@ -867,10 +867,10 @@ function promptDelete(node) {
   icon.removeAttribute('data-lucide');
   if (isDir) {
     icon.setAttribute('data-lucide', 'folder');
-    warningText.innerHTML = '<i data-lucide="alert-triangle"></i> Atenção: Isto excluirá recursivamente a pasta e todos os seus arquivos!';
+    warningText.innerHTML = '<i data-lucide="alert-triangle"></i> Warning: This will recursively delete the folder and all of its files!';
   } else {
     icon.setAttribute('data-lucide', 'file');
-    warningText.innerHTML = '<i data-lucide="alert-triangle"></i> Esta ação não pode ser desfeita!';
+    warningText.innerHTML = '<i data-lucide="alert-triangle"></i> This action cannot be undone!';
   }
   
   lucide.createIcons();

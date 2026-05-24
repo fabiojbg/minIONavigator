@@ -76,7 +76,7 @@
         <!-- Dynamic nodes will be injected here -->
         <div class="loading-spinner">
           <div class="spinner"></div>
-          <span>Carregando arquivos...</span>
+          <span>Loading files...</span>
         </div>
       </div>
     </aside>
@@ -99,9 +99,9 @@
         </div>
         <div class="header-actions">
           <span class="file-size-badge" id="header-file-size">0 KB</span>
-          <button id="edit-btn" class="btn btn-secondary" title="Editar este arquivo" style="display: none;">
+          <button id="edit-btn" class="btn btn-secondary" title="Edit this file" style="display: none;">
             <i data-lucide="edit-3"></i>
-            <span>Editar</span>
+            <span>Edit</span>
           </button>
           <button id="raw-btn" class="btn btn-secondary" title="View Raw File Content">
             <i data-lucide="external-link"></i>
@@ -117,24 +117,24 @@
           <div class="welcome-card">
             <i data-lucide="folder-search" class="welcome-logo"></i>
             <h2>MinIO File Navigator</h2>
-            <p>Selecione um arquivo suportado na barra lateral para visualizar seu conteúdo.</p>
+            <p>Select a supported file from the sidebar to view its content.</p>
             <div class="supported-formats">
               <span class="format-tag"><i data-lucide="file-text"></i> Markdown (.md)</span>
               <span class="format-tag"><i data-lucide="code"></i> JSON (.json)</span>
-              <span class="format-tag"><i data-lucide="align-left"></i> Texto (.txt)</span>
+              <span class="format-tag"><i data-lucide="align-left"></i> Text (.txt)</span>
             </div>
             <div class="instructions">
               <div class="instruction-step">
                 <span class="step-num">1</span>
-                <span><strong>Duplo clique</strong> nas pastas no sidebar para expandi-las ou recolhê-las.</span>
+                <span><strong>Double-click</strong> folders in the sidebar to expand or collapse them.</span>
               </div>
               <div class="instruction-step">
                 <span class="step-num">2</span>
-                <span><strong>Clique único</strong> em um arquivo suportado para carregá-lo no visualizador.</span>
+                <span><strong>Single-click</strong> a supported file to load it in the viewer.</span>
               </div>
               <div class="instruction-step">
                 <span class="step-num">3</span>
-                <span><strong>Clique em um diagrama Mermaid</strong> para abrir no modo interativo de Pan e Zoom.</span>
+                <span><strong>Click a Mermaid diagram</strong> to open it in interactive Pan & Zoom mode.</span>
               </div>
             </div>
           </div>
@@ -147,8 +147,8 @@
         </div>
         <div class="view-body error-body" id="error-view" style="display: none;">
           <i data-lucide="alert-triangle" class="error-icon"></i>
-          <h3 id="error-title">Erro ao Carregar</h3>
-          <p id="error-message">Não foi possível carregar o arquivo selecionado.</p>
+          <h3 id="error-title">Error Loading</h3>
+          <p id="error-message">Could not load the selected file.</p>
         </div>
       </div>
     </main>
@@ -159,7 +159,7 @@
     <div class="modal-backdrop" id="modal-backdrop"></div>
     <div class="modal-window">
       <header class="modal-header">
-        <span class="modal-title"><i data-lucide="git-branch"></i> Diagrama Mermaid Interativo</span>
+        <span class="modal-title"><i data-lucide="git-branch"></i> Interactive Mermaid Diagram</span>
         <div class="modal-controls">
           <button id="zoom-in-btn" class="icon-btn modal-btn" title="Zoom In">
             <i data-lucide="zoom-in"></i>
@@ -181,7 +181,7 @@
         </div>
         <div class="modal-instructions">
           <i data-lucide="info" class="info-icon"></i>
-          <span>Use a rodinha do mouse para fazer zoom e clique + arraste para navegar pelo diagrama.</span>
+          <span>Use the mouse wheel to zoom and click + drag to navigate the diagram.</span>
         </div>
       </div>
     </div>
@@ -192,14 +192,14 @@
     <div class="modal-backdrop" id="edit-modal-backdrop"></div>
     <div class="modal-window edit-modal-window">
       <header class="modal-header">
-        <span class="modal-title"><i data-lucide="edit-3"></i> Editar Arquivo</span>
+        <span class="modal-title"><i data-lucide="edit-3"></i> Edit File</span>
         <div class="modal-meta-info" style="display: flex; flex-direction: column; margin-left: 20px; flex-grow: 1; min-width: 0;">
           <span class="edit-file-name" id="edit-file-name" style="font-weight: 600; font-size: 0.9rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">filename.md</span>
           <span class="edit-file-path" id="edit-file-path" style="font-size: 0.7rem; color: var(--text-secondary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">bucket/path/to/filename.md</span>
         </div>
         <div class="modal-controls">
           <div class="theme-selector-container">
-            <label for="editor-theme-select"><i data-lucide="palette"></i> Tema:</label>
+            <label for="editor-theme-select"><i data-lucide="palette"></i> Theme:</label>
             <select id="editor-theme-select" class="theme-select">
               <option value="dracula" selected>Dracula</option>
               <option value="monokai">Monokai</option>
@@ -208,11 +208,11 @@
               <option value="eclipse">Eclipse</option>
             </select>
           </div>
-          <button id="edit-save-btn" class="btn btn-primary" title="Salvar Alterações">
+          <button id="edit-save-btn" class="btn btn-primary" title="Save Changes">
             <i data-lucide="save"></i>
-            <span>Salvar</span>
+            <span>Save</span>
           </button>
-          <button id="edit-close-btn" class="icon-btn modal-btn close-btn" title="Fechar Sem Salvar">
+          <button id="edit-close-btn" class="icon-btn modal-btn close-btn" title="Close Without Saving">
             <i data-lucide="x"></i>
           </button>
         </div>
@@ -231,25 +231,25 @@
     <div class="modal-backdrop" id="delete-modal-backdrop"></div>
     <div class="modal-window small-modal-window">
       <header class="modal-header">
-        <span class="modal-title" style="color: var(--error-red); display: flex; align-items: center; gap: 8px;"><i data-lucide="trash-2"></i> Confirmar Exclusão</span>
-        <button id="delete-close-btn" class="icon-btn modal-btn close-btn" title="Fechar">
+        <span class="modal-title" style="color: var(--error-red); display: flex; align-items: center; gap: 8px;"><i data-lucide="trash-2"></i> Confirm Deletion</span>
+        <button id="delete-close-btn" class="icon-btn modal-btn close-btn" title="Close">
           <i data-lucide="x"></i>
         </button>
       </header>
       <div class="modal-body" style="padding: 24px; gap: 16px; display: flex; flex-direction: column;">
-        <p>Tem certeza de que deseja excluir permanentemente o seguinte item?</p>
+        <p>Are you sure you want to permanently delete the following item?</p>
         <div class="delete-item-info" style="display: flex; align-items: center; gap: 10px; background-color: var(--bg-card); padding: 12px; border: 1px solid var(--border-color); border-radius: 6px;">
           <i id="delete-item-icon" data-lucide="file" style="color: var(--accent-blue);"></i>
           <span id="delete-item-path" style="font-family: var(--font-mono); font-size: 0.85rem; word-break: break-all;">bucket/path/to/file.txt</span>
         </div>
         <div class="warning-text" id="delete-warning-text" style="color: var(--warning-yellow); display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 500;">
           <i data-lucide="alert-triangle"></i>
-          <span>Esta ação não pode ser desfeita!</span>
+          <span>This action cannot be undone!</span>
         </div>
       </div>
       <footer class="modal-footer" style="padding: 16px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 12px; background-color: var(--bg-sidebar);">
-        <button id="delete-cancel-btn" class="btn btn-secondary">Cancelar</button>
-        <button id="delete-confirm-btn" class="btn btn-danger" style="background-color: var(--error-red); border: 1px solid var(--error-red); color: white;">Excluir</button>
+        <button id="delete-cancel-btn" class="btn btn-secondary">Cancel</button>
+        <button id="delete-confirm-btn" class="btn btn-danger" style="background-color: var(--error-red); border: 1px solid var(--error-red); color: white;">Delete</button>
       </footer>
     </div>
   </div>

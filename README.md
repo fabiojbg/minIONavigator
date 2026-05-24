@@ -1,108 +1,126 @@
 # MinIO Navigator
 
-O **MinIO Navigator** é uma aplicação leve e moderna desenvolvida em Node.js para auxiliar na navegação de diretórios e visualização de arquivos em um servidor local do MinIO (ou qualquer outro serviço compatível com a API S3). 
+**MinIO Navigator** is a lightweight, modern application developed in Node.js to assist in directory navigation and file viewing on a local MinIO server (or any other service compatible with the S3 API). 
 
-Ele oferece uma interface web premium, responsiva e com tema escuro (Dark Theme), focada na legibilidade e interatividade de documentos técnicos, contendo suporte nativo para Markdown e renderização de diagramas Mermaid interativos.
-
----
-
-## Principais Recursos
-
-- **Sidebar Treeview Dinâmico (Lazy-Loaded)**: Carrega pastas sob demanda conforme o usuário navega. Pastas são exibidas antes dos arquivos e tudo é ordenado alfabeticamente.
-- **Divisor Flexível (Splitter)**: Permite ajustar a largura da barra lateral de navegação arrastando a borda com o mouse.
-- **Visualizador de Arquivos Extensível**:
-  - **Markdown (`.md`)**: Renderizado em HTML limpo e seguro (via `marked` e `DOMPurify`), com realce de sintaxe nos blocos de código via **Highlight.js**.
-  - **Texto / Código (`.txt`, `.json`, `.yml`, etc.)**: Visualizador premium com linhas numeradas e realce de sintaxe via **CodeMirror 5** (modo somente leitura).
-  - **Arquivos Não Suportados**: Exibição de mensagem informativa com link direto de download/visualização do conteúdo bruto.
-- **Gerenciamento Seguro de Arquivos**:
-  - **Edição em Popup**: Permite editar arquivos de texto/markdown diretamente em um popup/modal usando CodeMirror. Inclui dropdown com suporte a 5 temas de cores (*Dracula*, *Monokai*, *Material Darker*, *Nord*, *Eclipse*) persistidos no `localStorage`.
-  - **Exclusão**: Permite excluir permanentemente arquivos ou pastas recursivamente direto no sidebar (com modal de confirmação para prevenir acidentes).
-- **Diagramas Mermaid Interativos**:
-  - Renderiza blocos de código ` ```mermaid ` diretamente como SVG no corpo do documento.
-  - Ao clicar no diagrama, abre um **popup em tela cheia** com recursos avançados de **Pan (arrastar)** e **Zoom (roda do mouse)** utilizando a biblioteca `Panzoom`.
+It offers a premium, responsive web interface with a dark theme (Dark Theme), focused on readability and interactivity of technical documents, containing native support for Markdown and interactive Mermaid diagram rendering.
 
 ---
 
-## Requisitos Próximos
+## Key Features
 
-- **Node.js** (versão 16 ou superior)
-- Um servidor **MinIO** rodando localmente ou remotamente.
+- **Dynamic Sidebar Treeview (Lazy-Loaded)**: Loads folders on demand as the user navigates. Folders are displayed before files, and everything is sorted alphabetically.
+- **Flexible Splitter**: Allows adjusting the width of the navigation sidebar by dragging the border with the mouse.
+- **Extensible File Viewer**:
+  - **Markdown (`.md`)**: Rendered in clean and secure HTML (via `marked` and `DOMPurify`), with syntax highlighting in code blocks via **Highlight.js**.
+  - **Text / Code (`.txt`, `.json`, `.yml`, etc.)**: Premium viewer with line numbers and syntax highlighting via **CodeMirror 5** (read-only mode).
+  - **Unsupported Files**: Informative message display with a direct download/view link for the raw content.
+- **Secure File Management**:
+  - **Edit in Popup**: Allows editing text/markdown files directly in a popup/modal using CodeMirror. Includes a dropdown supporting 5 color themes (*Dracula*, *Monokai*, *Material Darker*, *Nord*, *Eclipse*) persisted in `localStorage`.
+  - **Deletion**: Allows permanently deleting files or folders recursively directly in the sidebar (with a confirmation modal to prevent accidents).
+- **Interactive Mermaid Diagrams**:
+  - Renders ` ```mermaid ` code blocks directly as SVG in the document body.
+  - Clicking on the diagram opens a **fullscreen popup** with advanced **Pan (drag)** and **Zoom (mouse wheel)** capabilities using the `Panzoom` library.
 
 ---
 
-## Instalação
+## Screenshots
 
-1. Clone ou extraia os arquivos do projeto para o seu diretório local.
-2. Acesse a pasta do projeto no terminal e instale as dependências:
+Here are some visual examples of the application's main interface and features:
+
+### 1. Markdown Viewer & Diagram Renderer
+Allows viewing rich Markdown documentation with embedded, interactive Mermaid diagrams.
+![Markdown Viewer](img/markdown-viewer.png)
+
+### 2. Text & Code File Viewer
+Displays code files (like JSON, YAML, etc.) with custom themes, syntax highlighting, and line numbers.
+![JSON File Viewer](img/text-file-viewer.png)
+
+### 3. Interactive File Editor
+Allows modifying file contents directly through the web UI with a theme-switchable CodeMirror code editor modal.
+![Text File Editor](img/text-file-edit.png)
+
+---
+
+## Requirements
+
+- **Node.js** (version 16 or higher)
+- A **MinIO** server running locally or remotely.
+
+---
+
+## Installation
+
+1. Clone or extract the project files to your local directory.
+2. Open the project folder in your terminal and install dependencies:
    ```bash
    npm install
    ```
 
 ---
 
-## Configuração (`.env`)
+## Configuration (`.env`)
 
-Crie um arquivo chamado `.env` na raiz do projeto (use o `.env.example` como base). Ele deve conter as seguintes configurações:
+Create a file named `.env` in the root of the project (use `.env.example` as a template). It must contain the following settings:
 
 ```env
-# Porta onde o servidor Node.js será executado
+# Port where the Node.js server will run
 PORT=4000
 
-# Dados de Conexão com o MinIO
+# MinIO Connection Details
 MINIO_ENDPOINT=localhost:9000
 MINIO_USE_SSL=false
-MINIO_ACCESS_KEY=seu_access_key
-MINIO_SECRET_KEY=seu_secret_key
+MINIO_ACCESS_KEY=your_access_key
+MINIO_SECRET_KEY=your_secret_key
 
-# Nome do Bucket padrão que deseja explorar
-# (Caso seja deixado em branco, a raiz exibirá a lista de todos os buckets disponíveis)
+# Default Bucket name you wish to explore
+# (If left blank, the root will display the list of all available buckets)
 MINIO_BUCKET=mdvis-docs
 ```
 
 ---
 
-## Executando o Projeto
+## Running the Project
 
-Para iniciar o servidor web:
+To start the web server:
 
-### Em Produção
+### In Production
 ```bash
 npm start
 ```
 
-### Em Desenvolvimento (reinicia automaticamente ao alterar arquivos)
+### In Development (automatically restarts when changing files)
 ```bash
 npm run dev
 ```
 
-Após iniciar, acesse o painel pelo navegador:
+After starting, access the dashboard through your browser:
 👉 **[http://localhost:4000](http://localhost:4000)**
 
 ---
 
-## Estrutura do Projeto
+## Project Structure
 
 ```
 minIONavigator/
-├── .env.example        # Modelo de configuração do ambiente
-├── .env                # Suas configurações ativas (não comitado no Git)
-├── package.json        # Arquivo de dependências do Node.js
-├── server.js           # Servidor Express & Integração com o SDK do MinIO
-└── public/             # Interface e recursos frontend
-    ├── index.html      # Estrutura HTML com os scripts CDN
-    ├── style.css       # Estilização visual (tema escuro e Markdown)
-    └── app.js          # Lógica frontend (splitter, treeview, renderers e panzoom)
+├── .env.example        # Environment configuration template
+├── .env                # Your active settings (not committed to Git)
+├── package.json        # Node.js dependencies file
+├── server.js           # Express Server & Integration with MinIO SDK
+└── public/             # Interface and frontend assets
+    ├── index.html      # HTML structure with CDN scripts
+    ├── style.css       # Visual styling (dark theme and Markdown)
+    └── app.js          # Frontend logic (splitter, treeview, renderers, and panzoom)
 ```
 
 ---
 
-## Estendendo a Área de Visualização
+## Extending the Viewing Area
 
-A aplicação possui uma arquitetura simples e desacoplada para renderizadores de arquivos dentro do arquivo `public/app.js`. Se quiser adicionar novos suportes, como por exemplo renderizar PDFs ou imagens, basta cadastrar um novo objeto no array `viewers`:
+The application features a simple, decoupled architecture for file renderers inside the `public/app.js` file. If you want to add support for new types of files, such as rendering PDFs or images, simply register a new object in the `viewers` array:
 
 ```javascript
 const viewers = [
-  // Exemplo de novo visualizador de imagens
+  // Example of a new image viewer
   {
     name: 'Images',
     test: (filename) => /\.(png|jpe?g|gif|svg|webp)$/i.test(filename),
@@ -115,6 +133,6 @@ const viewers = [
       `;
     }
   },
-  // Visualizadores padrão já inclusos ...
+  // Default viewers already included ...
 ];
 ```

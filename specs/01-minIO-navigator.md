@@ -1,162 +1,162 @@
-# Especificações do Projeto: MinIO Navigator
+# Project Specifications: MinIO Navigator
 
-Este documento descreve o conceito, a arquitetura e os detalhes de implementação do **MinIO Navigator**, servindo de guia técnico para desenvolvedores e agentes autônomos que venham a manter ou estender esta aplicação.
-
----
-
-## 1. Conceito Geral
-
-O **MinIO Navigator** é um navegador e visualizador de arquivos leve para servidores MinIO locais (ou outros armazenamentos de objetos compatíveis com a API S3). 
-
-A aplicação foi projetada para resolver a visualização rápida e interativa de documentações técnicas de projetos (arquivos Markdown com diagramas Mermaid inclusos, arquivos de configuração JSON, arquivos de log e textos diversos) sem a necessidade de baixar os arquivos manualmente.
+This document describes the concept, architecture, and implementation details of **MinIO Navigator**, serving as a technical guide for developers and autonomous agents who maintain or extend this application.
 
 ---
 
-## 2. Estrutura de Diretórios
+## 1. General Concept
 
-O projeto segue uma estrutura minimalista sem frameworks SPA complexos (como React, Vue ou Angular), utilizando HTML/CSS/JS puros e pacotes padrão no backend.
+**MinIO Navigator** is a lightweight file browser and viewer for local MinIO servers (or other object storages compatible with the S3 API). 
+
+The application is designed to provide quick and interactive viewing of project technical documentation (Markdown files with embedded Mermaid diagrams, JSON configuration files, log files, and various text files) without the need to download the files manually.
+
+---
+
+## 2. Directory Structure
+
+The project follows a minimalist structure without complex SPA frameworks (such as React, Vue, or Angular), using pure HTML/CSS/JS and standard packages in the backend.
 
 ```
 minIONavigator/
-├── .env.example                # Modelo de variáveis de ambiente
-├── .env                        # Chaves ativas de conexão com o MinIO (Ignorado no Git)
-├── package.json                # Gerenciamento de dependências
-├── server.js                   # Backend da aplicação (Express + MinIO SDK)
+├── .env.example                # Environment variables template
+├── .env                        # Active connection keys to MinIO (Git ignored)
+├── package.json                # Dependency management
+├── server.js                   # Application backend (Express + MinIO SDK)
 ├── specs/
-│   └── 01-minIO Navigator.md   # Este arquivo de especificações
-└── public/                     # Frontend estático
-    ├── index.html              # Layout principal e chamadas CDN
-    ├── style.css               # Tema escuro e estilização de Markdown/Mermaid
-    └── app.js                  # Lógica do splitter, árvore e visualizadores
+│   └── 01-minIO Navigator.md   # This specification file
+└── public/                     # Static frontend
+    ├── index.html              # Main layout and CDN imports
+    ├── style.css               # Dark theme and Markdown/Mermaid styling
+    └── app.js                  # Splitter logic, treeview, and viewers
 ```
 
 ---
 
-## 3. Configurações (`.env`)
+## 3. Configuration (`.env`)
 
-A aplicação busca as variáveis de ambiente a partir do arquivo `.env`. As variáveis essenciais são:
+The application loads environment variables from the `.env` file. The essential variables are:
 
-- `PORT`: Porta utilizada pelo servidor backend (padrão: `4000`).
-- `MINIO_ENDPOINT`: Host e porta do painel da API do MinIO (ex: `localhost:9000`).
-- `MINIO_USE_SSL`: Define se a conexão usa HTTPS (`true` ou `false`).
-- `MINIO_ACCESS_KEY` e `MINIO_SECRET_KEY`: Credenciais de acesso configuradas no MinIO.
-- `MINIO_BUCKET`: Opcional. Nome do bucket padrão que será exibido como raiz da árvore. Se omitido, a aplicação iniciará exibindo a lista de todos os buckets visíveis na conta.
+- `PORT`: Port used by the backend server (default: `4000`).
+- `MINIO_ENDPOINT`: Host and port of the MinIO API panel (e.g., `localhost:9000`).
+- `MINIO_USE_SSL`: Defines whether the connection uses HTTPS (`true` or `false`).
+- `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY`: Access credentials configured in MinIO.
+- `MINIO_BUCKET`: Optional. Name of the default bucket to display as the root of the tree. If omitted, the application will start by showing a list of all visible buckets in the account.
 
 ---
 
-## 4. Arquitetura do Backend (`server.js`)
+## 4. Backend Architecture (`server.js`)
 
-O backend é construído em Node.js com o framework **Express** e utiliza a biblioteca oficial `minio` para se comunicar com o servidor de armazenamento de objetos.
+The backend is built in Node.js with the **Express** framework and uses the official `minio` library to communicate with the object storage server.
 
-### Endpoints da API
+### API Endpoints
 
-#### 1. Listar Objetos: `GET /api/files`
-- **Parâmetros de Consulta (Query)**:
-  - `bucket` (opcional): O bucket onde pesquisar. Se não fornecido e `MINIO_BUCKET` do `.env` estiver vazio, retorna a lista de todos os buckets disponíveis.
-  - `prefix` (opcional): O diretório virtual a ser listado (ex: `Docs/`).
-- **Regras de Negócio**:
-  - Faz a listagem não recursiva (`recursive: false`) sob o prefixo especificado.
-  - Formata as saídas identificando diretórios virtuais (prefixes) e arquivos normais (objects).
-  - **Ordenação**: Separa pastas e arquivos. Ordena as pastas alfabeticamente e os arquivos alfabeticamente. Em seguida, concatena e retorna a lista com as pastas aparecendo primeiro.
+#### 1. List Objects: `GET /api/files`
+- **Query Parameters**:
+  - `bucket` (optional): The bucket to search in. If not provided and `MINIO_BUCKET` in `.env` is empty, returns a list of all available buckets.
+  - `prefix` (optional): The virtual directory to list (e.g., `Docs/`).
+- **Business Rules**:
+  - Performs a non-recursive listing (`recursive: false`) under the specified prefix.
+  - Formats output identifying virtual directories (prefixes) and regular files (objects).
+  - **Sorting**: Separates folders and files. Sorts folders alphabetically and files alphabetically. Then, concatenates and returns the list with folders appearing first.
   
-#### 2. Obter Arquivo Bruto: `GET /api/file`
-- **Parâmetros de Consulta (Query)**:
-  - `bucket` (obrigatório)
-  - `path` (obrigatório): O caminho completo até o objeto desejado.
-- **Regras de Negócio**:
-  - Obtém o stream do objeto chamada `getObject(bucket, path)`.
-  - Resolve a extensão do arquivo e atribui o cabeçalho `Content-Type` apropriado (ex: `text/markdown`, `application/json`, `text/plain`).
-  - Encaminha o stream diretamente para a resposta da requisição (`stream.pipe(res)`).
+#### 2. Get Raw File: `GET /api/file`
+- **Query Parameters**:
+  - `bucket` (required)
+  - `path` (required): The complete path to the desired object.
+- **Business Rules**:
+  - Retrieves the object stream using `getObject(bucket, path)`.
+  - Resolves the file extension and assigns the appropriate `Content-Type` header (e.g., `text/markdown`, `application/json`, `text/plain`).
+  - Pipes the stream directly to the request response (`stream.pipe(res)`).
 
-#### 3. Excluir Objeto/Pasta: `DELETE /api/file`
-- **Parâmetros de Consulta (Query)**:
-  - `bucket` (obrigatório)
-  - `path` (obrigatório): O caminho ou prefixo virtual da pasta.
-  - `isDir` (obrigatório): `true` para diretórios virtuais (pastas), `false` para arquivos simples.
-- **Regras de Negócio**:
-  - Se `isDir` for `false`, aciona `removeObject` diretamente.
-  - Se `isDir` for `true`, realiza listagem recursiva de todas as chaves sob o prefixo e executa `removeObjects` em lote no MinIO para limpeza recursiva de subdiretórios.
+#### 3. Delete Object/Folder: `DELETE /api/file`
+- **Query Parameters**:
+  - `bucket` (required)
+  - `path` (required): The path or virtual prefix of the folder.
+  - `isDir` (required): `true` for virtual directories (folders), `false` for simple files.
+- **Business Rules**:
+  - If `isDir` is `false`, triggers `removeObject` directly.
+  - If `isDir` is `true`, performs a recursive listing of all keys under the prefix and executes a bulk `removeObjects` call in MinIO for recursive cleanup of subdirectories.
 
-#### 4. Salvar Arquivo de Texto: `POST /api/save`
-- **Corpo da Requisição (JSON)**:
-  - `bucket` (obrigatório)
-  - `path` (obrigatório): O caminho do objeto.
-  - `content` (obrigatório): O conteúdo de texto atualizado.
-- **Regras de Negócio**:
-  - Converte a string de conteúdo recebida em um buffer UTF-8.
-  - Salva o arquivo no MinIO por meio do método `putObject` substituindo o arquivo anterior.
+#### 4. Save Text File: `POST /api/save`
+- **Request Body (JSON)**:
+  - `bucket` (required)
+  - `path` (required): The path of the object.
+  - `content` (required): The updated text content.
+- **Business Rules**:
+  - Converts the received content string into a UTF-8 buffer.
+  - Saves the file in MinIO using the `putObject` method, replacing the previous file.
 
 ---
 
-## 5. Arquitetura do Frontend (`public/`)
+## 5. Frontend Architecture (`public/`)
 
-A interface foi projetada com foco em experiência de usuário (UX) e visual premium utilizando temas escuros inspirados em IDEs modernos.
+The interface was designed with a focus on user experience (UX) and a premium look, using dark themes inspired by modern IDEs.
 
 ### 5.1 HTML (`index.html`)
-O frontend utiliza bibliotecas importadas via CDN para evitar etapas de compilação complexas:
-- **Lucide Icons**: Ícones minimalistas em formato vetorial SVG.
-- **Marked.js**: Conversor rápido de Markdown para HTML.
-- **DOMPurify**: Sanitizador de segurança que remove scripts maliciosos injetados em Markdown.
-- **Mermaid.js**: Motor JavaScript de renderização de fluxogramas e diagramas baseados em texto.
-- **Panzoom**: Biblioteca leve para realizar zoom e movimentações bidimensionais (pan) em elementos HTML/SVG.
+The frontend uses libraries imported via CDN to avoid complex build steps:
+- **Lucide Icons**: Minimalist vector icons in SVG format.
+- **Marked.js**: Fast Markdown-to-HTML converter.
+- **DOMPurify**: Security sanitizer that removes malicious scripts injected in Markdown.
+- **Mermaid.js**: JavaScript engine for rendering text-based flowcharts and diagrams.
+- **Panzoom**: Lightweight library for zooming and panning HTML/SVG elements.
 
-### 5.2 Divisor de Tela (Splitter)
-Implementado no script `app.js` escutando eventos de mouse do navegador:
-- Altera a largura (`width`) do elemento `.sidebar` dinamicamente conforme o mouse arrasta a barra divisória.
-- Define a variável CSS `--sidebar-width` globalmente para manter o layout consistente.
-- Possui limites de largura mínima e máxima (`220px` a `600px`).
+### 5.2 Screen Splitter
+Implemented in the `app.js` script by listening to browser mouse events:
+- Dynamically updates the width of the `.sidebar` element as the mouse drags the splitter bar.
+- Sets the global CSS variable `--sidebar-width` to keep the layout consistent.
+- Has minimum and maximum width limits (`220px` to `600px`).
 
-### 5.3 Navegador em Árvore (Treeview)
-O componente de navegação funciona de forma preguiçosa (**lazy loading**):
-1. No carregamento inicial, busca os elementos raiz da API (`/api/files`).
-2. Constrói elementos DOM aninhados sob a classe `.tree-node-wrapper`.
-3. **Expansão de Pastas**:
-   - Ocorre via **duplo clique** na pasta ou por **clique simples** na setinha de expansão (`.node-arrow`).
-   - Se os dados da pasta ainda não foram carregados, exibe um spinner e chama `/api/files?bucket=...&prefix=...` para injetar os filhos no DOM.
-   - Rotaciona a setinha `.node-arrow` adicionando a classe `.expanded` (transformando a seta lateral em seta apontando para baixo).
-4. **Seleção de Arquivos**:
-   - Um clique simples no nó de um arquivo destaca-o visualmente (classe `.active`) e dispara a função `loadFile`.
+### 5.3 Treeview Browser
+The navigation component operates lazily (**lazy loading**):
+1. On initial load, fetches the root elements from the API (`/api/files`).
+2. Constructs nested DOM elements under the `.tree-node-wrapper` class.
+3. **Folder Expansion**:
+   - Triggered via **double-click** on the folder or a **single-click** on the expansion arrow (`.node-arrow`).
+   - If folder data is not yet loaded, displays a spinner and calls `/api/files?bucket=...&prefix=...` to inject child elements into the DOM.
+   - Rotates the `.node-arrow` by adding the `.expanded` class (turning the side arrow into a down arrow).
+4. **File Selection**:
+   - A single-click on a file node highlights it visually (adds class `.active`) and triggers the `loadFile` function.
 
-### 5.4 Arquitetura Extensível do Visualizador
-A renderização dos arquivos utiliza um padrão de registro extensível. No arquivo `app.js`, há um array de visualizadores registrados:
+### 5.4 Extensible Viewer Architecture
+File rendering uses an extensible registration pattern. In `app.js`, there is an array of registered viewers:
 
 ```javascript
 const viewers = [
   {
     name: 'Markdown',
     test: (filename) => filename.endsWith('.md'),
-    render: async (bucket, path, container) => { /* renderização markdown e mermaid */ }
+    render: async (bucket, path, container) => { /* markdown and mermaid rendering */ }
   },
   {
     name: 'Text/JSON',
-    test: (filename) => { /* teste para txt, json, logs */ },
-    render: async (bucket, path, container) => { /* exibição de código ou texto */ }
+    test: (filename) => { /* test for txt, json, logs */ },
+    render: async (bucket, path, container) => { /* code or text display */ }
   }
 ];
 ```
 
-Se nenhum visualizador retornar `true` no teste de nome, o sistema utiliza o `fallbackViewer` padrão. Isso permite que novas extensões de arquivo (ex: `.pdf`, `.png`) sejam mapeadas futuramente de maneira limpa apenas inserindo novos elementos no array `viewers`.
+If no viewer returns `true` in the file name test, the system uses the default `fallbackViewer`. This allows new file extensions (e.g., `.pdf`, `.png`) to be cleanly mapped in the future simply by inserting new elements into the `viewers` array.
 
-### 5.5 Integração de Diagramas Mermaid
-Quando um arquivo Markdown é renderizado:
-1. O texto do markdown é parseado para HTML e sanitizado.
-2. A aplicação faz uma busca no HTML gerado procurando blocos de código rotulados como `language-mermaid`.
-3. Substitui os blocos `<pre><code>` por um contêiner `.mermaid-container` e salva o código mermaid original no atributo `data-diagram` do elemento.
-4. Inicializa o Mermaid e aciona a renderização assíncrona (`mermaid.render`) convertendo o texto do diagrama em um SVG injetado na tela.
-5. Adiciona um escutador de cliques no SVG. Ao clicar, a aplicação abre o painel modal interativo.
+### 5.5 Mermaid Diagrams Integration
+When a Markdown file is rendered:
+1. The markdown text is parsed to HTML and sanitized.
+2. The application scans the generated HTML looking for code blocks labeled as `language-mermaid`.
+3. Replaces `<pre><code>` blocks with a `.mermaid-container` wrapper and saves the original mermaid code in the element's `data-diagram` attribute.
+4. Initializes Mermaid and triggers asynchronous rendering (`mermaid.render`), converting diagram text into an SVG injected into the viewport.
+5. Adds a click listener to the SVG. When clicked, the application opens the interactive modal panel.
 
-### 5.6 Modal Interativo (Zoom e Pan)
-- O modal preenche a quase totalidade da viewport com um fundo translúcido desfocado (`backdrop-filter`).
-- Recebe o código bruto do diagrama do elemento clicado e reconstrói o SVG no modal.
-- Inicializa a biblioteca `Panzoom` no SVG gerado, vinculando a rolagem do mouse (`wheel`) ao controle de ampliação/redução e habilitando a navegação livre ao arrastar o mouse.
-- Oferece controles manuais rápidos: Zoom In, Zoom Out, Restaurar Zoom/Posição e Fechar.
+### 5.6 Interactive Modal (Zoom and Pan)
+- The modal fills almost the entire viewport with a blurred translucent background (`backdrop-filter`).
+- Receives the raw diagram code from the clicked element and reconstructs the SVG in the modal.
+- Initializes the `Panzoom` library on the generated SVG, binding mouse wheel scrolling to zoom level controls and enabling free navigation by dragging the mouse.
+- Offers quick manual controls: Zoom In, Zoom Out, Reset Zoom/Position, and Close.
 
-### 5.7 Realce de Sintaxe (Syntax Highlighting)
-A visualização de arquivos de texto e código utiliza mecanismos modernos de colorização:
-- **Visualizador Markdown (`.md`)**: Blocos de código internos são analisados pós-processamento e colorizados via biblioteca **Highlight.js** (ignoring Mermaid diagram nodes).
-- **Visualizador de Texto/Código (`.txt`, `.json`, `.py`, etc.)**: Utiliza um editor **CodeMirror 5** instanciado em modo somente leitura (`readOnly: 'nocursor'`), com suporte a temas e linhas numeradas. O modo é selecionado automaticamente baseado na extensão do arquivo.
+### 5.7 Syntax Highlighting
+Text and code file viewing utilizes modern syntax coloring engines:
+- **Markdown Viewer (`.md`)**: Internal code blocks are analyzed post-processing and colored via the **Highlight.js** library (ignoring Mermaid diagram nodes).
+- **Text/Code Viewer (`.txt`, `.json`, `.py`, etc.)**: Uses a **CodeMirror 5** editor instantiated in read-only mode (`readOnly: 'nocursor'`), supporting themes and line numbers. The mode is automatically selected based on the file extension.
 
-### 5.8 Gerenciamento de Arquivos
-A aplicação permite modificar e remover arquivos sob regras seguras:
-- **Edição de Texto**: Ocorre em um modal responsivo que carrega uma instância editável do CodeMirror. Permite alterar o conteúdo e alternar dinamicamente entre 5 opções de temas (*Dracula*, *Monokai*, *Material Darker*, *Nord*, *Eclipse*), gravando as preferências no `localStorage` do usuário. Ao salvar, as alterações são persistidas no backend e o painel de visualização é recarregado instantaneamente.
-- **Exclusão**: Acionada via botões de ação rápida (`.node-actions`) que aparecem no hover da árvore lateral (protegendo buckets principais). Exibe um modal de confirmação. Ao ser concluída com sucesso, recarrega cirurgicamente apenas o diretório pai afetado da árvore, preservando o estado de expansão de outros ramos. Se o arquivo deletado estiver sendo visualizado no painel de leitura, o sistema limpa a tela redirecionando para o card de boas-vindas.
+### 5.8 File Management
+The application allows modifying and removing files under secure rules:
+- **Text Editing**: Takes place in a responsive modal that loads an editable CodeMirror instance. Allows changing the content and dynamically switching between 5 theme options (*Dracula*, *Monokai*, *Material Darker*, *Nord*, *Eclipse*), saving preferences in the user's `localStorage`. Upon saving, changes are persisted to the backend and the viewing panel is reloaded instantly.
+- **Deletion**: Triggered via quick action buttons (`.node-actions`) that appear on hover over the sidebar tree (protecting main buckets). Displays a confirmation modal. Once successfully completed, surgically reloads only the affected parent directory of the tree, preserving the expanded state of other branches. If the deleted file was being viewed in the reading panel, the system clears the screen, redirecting to the welcome card.
