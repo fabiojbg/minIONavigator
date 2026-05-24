@@ -836,13 +836,14 @@ function initDeleteModal() {
       
       if (!res.ok) throw new Error(await res.text() || 'Failed to delete');
       
+      const nodeToRefresh = nodeToDelete;
       closeModal();
       
       if (activeFileMeta && activeFileMeta.bucket === bucket && activeFileMeta.path === path) {
         resetViewerToWelcome();
       }
       
-      await refreshParentOfNode(nodeToDelete);
+      await refreshParentOfNode(nodeToRefresh);
       
     } catch (err) {
       alert('Erro ao excluir: ' + err.message);
