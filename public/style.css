@@ -1099,16 +1099,17 @@ body {
 /* Text viewer CodeMirror container */
 #text-viewer-editor-container {
   width: 100%;
-  height: 100%;
-  min-height: 500px;
+  flex-grow: 1;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 #text-viewer-editor-container .CodeMirror {
-  height: 600px !important;
-  /* fixed high container for view */
+  flex-grow: 1;
+  height: 100% !important;
 }
 
 /* --- Small modal window styling --- */
@@ -1123,5 +1124,8 @@ body {
 .text-body {
   max-width: 100%;
   padding: 24px;
-  height: 100%;
+  height: calc(100% - 48px);
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }

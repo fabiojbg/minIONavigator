@@ -4,6 +4,7 @@
 
 It offers a premium, responsive web interface with a dark theme (Dark Theme), focused on readability and interactivity of technical documents, containing native support for Markdown and interactive Mermaid diagram rendering.
 
+> This project is 
 ---
 
 ## Key Features

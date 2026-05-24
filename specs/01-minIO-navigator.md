@@ -118,19 +118,21 @@ The navigation component operates lazily (**lazy loading**):
    - A single-click on a file node highlights it visually (adds class `.active`) and triggers the `loadFile` function.
 
 ### 5.4 Extensible Viewer Architecture
-File rendering uses an extensible registration pattern. In `app.js`, there is an array of registered viewers:
+The application uses an ES Module script format (`type="module"`) and encapsulates all application logic and state inside the `MinIONavigator` class.
+
+File rendering uses an extensible registration pattern defined inside the class constructor as `this.viewers`:
 
 ```javascript
-const viewers = [
+this.viewers = [
   {
     name: 'Markdown',
     test: (filename) => filename.endsWith('.md'),
-    render: async (bucket, path, container) => { /* markdown and mermaid rendering */ }
+    render: async (bucket, path, container) => this.renderMarkdown(bucket, path, container)
   },
   {
     name: 'Text/JSON',
     test: (filename) => { /* test for txt, json, logs */ },
-    render: async (bucket, path, container) => { /* code or text display */ }
+    render: async (bucket, path, container) => this.renderTextOrJson(bucket, path, container)
   }
 ];
 ```
