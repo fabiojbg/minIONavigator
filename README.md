@@ -94,46 +94,19 @@ npm start
 npm run dev
 ```
 
-After starting, access the dashboard through your browser:
-👉 **[http://localhost:4000](http://localhost:4000)**
+### For advanced users: With Docker Compose
+To run MinIO Navigator alongside a local pre-configured MinIO server instance in docker containers:
+```bash
+docker compose up --build -d
+```
+After starting:
+- **MinIO Navigator UI**: 👉 **[http://localhost:4000](http://localhost:4000)**
+
+> [!ATTENTION] - HOW TO CONNECT THE MINIO FROM ANOTHER DOCKER COMPOSE STACK
+
+> If you have MinIO running in another Docker Compose stack, follow the instructions on Dockerfile before run `docker compose up -d`
 
 ---
 
-## Project Structure
 
-```
-minIONavigator/
-├── .env.example        # Environment configuration template
-├── .env                # Your active settings (not committed to Git)
-├── package.json        # Node.js dependencies file
-├── server.js           # Express Server & Integration with MinIO SDK
-└── public/             # Interface and frontend assets
-    ├── index.html      # HTML structure with CDN scripts
-    ├── style.css       # Visual styling (dark theme and Markdown)
-    └── app.js          # Frontend logic (splitter, treeview, renderers, and panzoom)
-```
 
----
-
-## Extending the Viewing Area
-
-The application features a simple, decoupled architecture for file renderers inside the `public/app.js` file. If you want to add support for new types of files, such as rendering PDFs or images, simply register a new object in the `viewers` array:
-
-```javascript
-const viewers = [
-  // Example of a new image viewer
-  {
-    name: 'Images',
-    test: (filename) => /\.(png|jpe?g|gif|svg|webp)$/i.test(filename),
-    render: async (bucket, path, container) => {
-      container.innerHTML = `
-        <div style="text-align: center; padding: 20px;">
-          <img src="/api/file?bucket=${encodeURIComponent(bucket)}&path=${encodeURIComponent(path)}" 
-               style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" />
-        </div>
-      `;
-    }
-  },
-  // Default viewers already included ...
-];
-```

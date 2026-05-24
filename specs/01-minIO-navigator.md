@@ -18,8 +18,11 @@ The project follows a minimalist structure without complex SPA frameworks (such 
 
 ```
 minIONavigator/
+├── .dockerignore               # Docker ignore rules
 ├── .env.example                # Environment variables template
 ├── .env                        # Active connection keys to MinIO (Git ignored)
+├── Dockerfile                  # Application container builder
+├── docker-compose.yml          # Container orchestration (App + local MinIO)
 ├── package.json                # Dependency management
 ├── server.js                   # Application backend (Express + MinIO SDK)
 ├── specs/
@@ -163,3 +166,26 @@ Text and code file viewing utilizes modern syntax coloring engines:
 The application allows modifying and removing files under secure rules:
 - **Text Editing**: Takes place in a responsive modal that loads an editable CodeMirror instance. Allows changing the content and dynamically switching between 5 theme options (*Dracula*, *Monokai*, *Material Darker*, *Nord*, *Eclipse*), saving preferences in the user's `localStorage`. Upon saving, changes are persisted to the backend and the viewing panel is reloaded instantly.
 - **Deletion**: Triggered via quick action buttons (`.node-actions`) that appear on hover over the sidebar tree (protecting main buckets). Displays a confirmation modal. Once successfully completed, surgically reloads only the affected parent directory of the tree, preserving the expanded state of other branches. If the deleted file was being viewed in the reading panel, the system clears the screen, redirecting to the welcome card.
+
+---
+
+## 6. Containerization (Docker)
+
+To streamline testing, deployment, and development, the project includes Docker configuration.
+
+### 6.1 Dockerfile
+The application uses a single-stage `Dockerfile` based on `node:20-alpine`:
+- Copies the `package.json` and `package-lock.json`.
+- Runs `npm ci --omit=dev` to install only production dependencies.
+- Copies the application source files (`server.js`, `public/`).
+- Exposes port `4000` and configures the start command `npm start`.
+
+### 6.2 Docker Compose (`docker-compose.yml`)
+The orchestration file sets up a self-contained local environment containing two services:
+1. **`minio`**: A local MinIO S3 API-compatible service running on port `9000` (API) and port `9001` (Console) with a persistent volume (`minio_data`).
+2. **`app`**: The MinIO Navigator application container. It builds from the local directory and exposes port `4000` to the host.
+
+### 6.3 Networking & Connections
+- Within the Docker network, the application service resolves the hostname `minio` to the containerized MinIO instance.
+- **Connection endpoint**: `MINIO_ENDPOINT` is configured to `minio:9000` inside the `docker-compose.yml`.
+- If developers wish to connect the containerized app to a MinIO instance running on their host machine, they should configure `MINIO_ENDPOINT` to `host.docker.internal:9000` (on Windows/macOS).

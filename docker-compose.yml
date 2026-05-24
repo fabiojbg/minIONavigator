@@ -1,0 +1,43 @@
+services:
+  app:
+    build: .
+    container_name: minio-navigator
+    ports:
+      - "4000:4000" # Web UI Port
+    environment:
+      - PORT=4000
+      
+      # --- MINIO CONNECTION OPTION 1: Same Docker Compose network ---
+      # (If you restore the 'minio' service in this compose)
+      # - MINIO_ENDPOINT=minio:9000
+      
+      # --- MINIO CONNECTION OPTION 2: MinIO running on the host machine ---
+      # (E.g., if you run MinIO outside Docker on port 9000)
+      - MINIO_ENDPOINT=host.docker.internal:9000
+      
+      # --- MINIO CONNECTION OPTION 3: MinIO in another Docker Compose stack ---
+      # (Uncomment the 'networks' sections below and change 'minio-container-name' to the actual container name)
+      # - MINIO_ENDPOINT=minio-container-name:9000
+
+      - MINIO_USE_SSL=false
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=mdvis-docs
+    
+    # Required for OPTION 2 on Windows/macOS (resolves host.docker.internal)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    
+    # Required for OPTION 3 (Uncomment to attach to the external network)
+    # networks:
+    #   - external_minio_net
+    
+    restart: unless-stopped
+
+# Required for OPTION 3 (Uncomment and rename 'external_network_name' to the network of the other compose stack)
+# networks:
+#   external_minio_net:
+#     name: external_network_name
+#     external: true
+
+
