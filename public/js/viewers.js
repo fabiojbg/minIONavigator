@@ -15,6 +15,19 @@ export class ViewerManager {
           return ['txt', 'json', 'log', 'xml', 'js', 'py', 'html', 'css', 'yaml', 'yml', 'env', 'conf', 'ini'].includes(ext);
         },
         render: async (bucket, path, container) => this.renderTextOrJson(bucket, path, container)
+      },
+      {
+        name: 'Image',
+        test: (filename) => {
+          const ext = filename.split('.').pop().toLowerCase();
+          return ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp', 'ico'].includes(ext);
+        },
+        render: async (bucket, path, container) => this.renderImage(bucket, path, container)
+      },
+      {
+        name: 'PDF',
+        test: (filename) => filename.endsWith('.pdf'),
+        render: async (bucket, path, container) => this.renderPDF(bucket, path, container)
       }
     ];
 
@@ -28,6 +41,8 @@ export class ViewerManager {
     const welcomeScreen = document.getElementById('welcome-screen');
     const markdownView = document.getElementById('markdown-view');
     const textView = document.getElementById('text-view');
+    const imageView = document.getElementById('image-view');
+    const pdfView = document.getElementById('pdf-view');
     const errorView = document.getElementById('error-view');
     
     const header = document.getElementById('viewer-header');
@@ -70,6 +85,10 @@ export class ViewerManager {
     headerIcon.removeAttribute('data-lucide');
     if (ext === 'md') {
       headerIcon.setAttribute('data-lucide', 'file-text');
+    } else if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp', 'ico'].includes(ext)) {
+      headerIcon.setAttribute('data-lucide', 'image');
+    } else if (ext === 'pdf') {
+      headerIcon.setAttribute('data-lucide', 'file-text');
     } else if (['json', 'js', 'py', 'html', 'css', 'yaml', 'yml'].includes(ext)) {
       headerIcon.setAttribute('data-lucide', 'code');
     } else {
@@ -80,10 +99,14 @@ export class ViewerManager {
     welcomeScreen.style.display = 'none';
     markdownView.style.display = 'none';
     textView.style.display = 'none';
+    imageView.style.display = 'none';
+    pdfView.style.display = 'none';
     errorView.style.display = 'none';
     
     markdownView.innerHTML = '';
     textView.innerHTML = '';
+    imageView.innerHTML = '';
+    pdfView.innerHTML = '';
     this.app.currentViewerEditor = null;
 
     const viewer = this.viewers.find(v => v.test(name)) || this.fallbackViewer;
@@ -106,6 +129,12 @@ export class ViewerManager {
             this.app.currentViewerEditor.refresh();
           }, 50);
         }
+      } else if (viewer.name === 'Image') {
+        imageView.style.display = 'flex';
+        await viewer.render(bucket, path, imageView);
+      } else if (viewer.name === 'PDF') {
+        pdfView.style.display = 'block';
+        await viewer.render(bucket, path, pdfView);
       } else {
         await viewer.render(bucket, path, markdownView);
         markdownView.style.display = 'block';
@@ -178,6 +207,22 @@ export class ViewerManager {
       readOnly: 'nocursor',
       lineWrapping: true
     });
+  }
+
+  async renderImage(bucket, path, container) {
+    const url = `/api/file?bucket=${encodeURIComponent(bucket)}&path=${encodeURIComponent(path)}`;
+    container.innerHTML = `
+      <div class="image-viewer-wrapper">
+        <img src="${url}" alt="${path.split('/').pop()}" />
+      </div>
+    `;
+  }
+
+  async renderPDF(bucket, path, container) {
+    const url = `/api/file?bucket=${encodeURIComponent(bucket)}&path=${encodeURIComponent(path)}`;
+    container.innerHTML = `
+      <iframe class="pdf-viewer-iframe" src="${url}"></iframe>
+    `;
   }
 
   async renderFallback(bucket, path, container) {

@@ -8,7 +8,7 @@ This document describes the concept, architecture, and implementation details of
 
 **MinIO Navigator** is a lightweight file browser and viewer for local MinIO servers (or other object storages compatible with the S3 API). 
 
-The application is designed to provide quick and interactive viewing of project technical documentation (Markdown files with embedded Mermaid diagrams, JSON configuration files, log files, and various text files) without the need to download the files manually.
+The application is designed to provide quick and interactive viewing of project technical documentation (Markdown files with embedded Mermaid diagrams, JSON configuration files, log files, various text files, image files, and PDF documentation) without the need to download the files manually.
 
 ---
 
@@ -156,11 +156,21 @@ this.viewers = [
     name: 'Text/JSON',
     test: (filename) => { /* test for txt, json, logs */ },
     render: async (bucket, path, container) => this.renderTextOrJson(bucket, path, container)
+  },
+  {
+    name: 'Image',
+    test: (filename) => { /* test for png, jpg, svg, webp, etc. */ },
+    render: async (bucket, path, container) => this.renderImage(bucket, path, container)
+  },
+  {
+    name: 'PDF',
+    test: (filename) => filename.endsWith('.pdf'),
+    render: async (bucket, path, container) => this.renderPDF(bucket, path, container)
   }
 ];
 ```
 
-If no viewer returns `true` in the file name test, the system uses the default `fallbackViewer`. This allows new file extensions (e.g., `.pdf`, `.png`) to be cleanly mapped in the future simply by inserting new elements into the `viewers` array.
+If no viewer returns `true` in the file name test, the system uses the default `fallbackViewer`.
 
 ### 5.5 Mermaid Diagrams Integration
 When a Markdown file is rendered:

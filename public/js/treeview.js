@@ -124,6 +124,12 @@ export class Treeview {
       if (ext === 'md') {
         icon.className += ' file-md';
         icon.setAttribute('data-lucide', 'file-text');
+      } else if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp', 'ico'].includes(ext)) {
+        icon.className += ' file-image';
+        icon.setAttribute('data-lucide', 'image');
+      } else if (ext === 'pdf') {
+        icon.className += ' file-pdf';
+        icon.setAttribute('data-lucide', 'file-text');
       } else if (['json', 'js', 'py', 'html', 'css', 'yaml', 'yml'].includes(ext)) {
         icon.className += ' file-code';
         icon.setAttribute('data-lucide', 'code');
