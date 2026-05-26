@@ -2,8 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const Minio = require('minio');
 const path = require('path');
+const multer = require('multer');
 
 const app = express();
+const upload = multer({ storage: multer.memoryStorage() });
 app.use(express.json()); // support json encoded bodies
 const PORT = process.env.PORT || 4000;
 
@@ -248,6 +250,30 @@ app.post('/api/save', express.json({ limit: '10mb' }), async (req, res) => {
   } catch (err) {
     console.error(`Error saving object ${filePath}:`, err);
     res.status(500).json({ error: 'Failed to save: ' + err.message });
+  }
+});
+
+// Endpoint to upload a file (1 or multiple, handled sequentially from client)
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  const bucket = req.body.bucket || defaultBucket;
+  const filePath = req.body.path;
+
+  if (!bucket) {
+    return res.status(400).send('Bucket is required');
+  }
+  if (!filePath) {
+    return res.status(400).send('Path is required');
+  }
+  if (!req.file) {
+    return res.status(400).send('No file uploaded');
+  }
+
+  try {
+    await minioClient.putObject(bucket, filePath, req.file.buffer, req.file.size);
+    res.json({ success: true, message: `File ${filePath} uploaded successfully` });
+  } catch (err) {
+    console.error(`Error uploading object ${filePath}:`, err);
+    res.status(500).json({ error: 'Failed to upload: ' + err.message });
   }
 });
 

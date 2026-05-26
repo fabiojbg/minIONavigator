@@ -60,9 +60,14 @@
           <i data-lucide="compass" class="brand-icon"></i>
           <span>MinIO Navigator</span>
         </div>
-        <button id="refresh-btn" class="icon-btn" title="Refresh Tree">
-          <i data-lucide="refresh-cw"></i>
-        </button>
+        <div class="sidebar-header-actions" style="display: flex; gap: 8px;">
+          <button id="upload-btn" class="icon-btn" title="Upload Files">
+            <i data-lucide="upload-cloud"></i>
+          </button>
+          <button id="refresh-btn" class="icon-btn" title="Refresh Tree">
+            <i data-lucide="refresh-cw"></i>
+          </button>
+        </div>
       </div>
       
       <!-- Current Bucket Banner (if default bucket is configured) -->
@@ -251,6 +256,43 @@
         <button id="delete-cancel-btn" class="btn btn-secondary">Cancel</button>
         <button id="delete-confirm-btn" class="btn btn-danger" style="background-color: var(--error-red); border: 1px solid var(--error-red); color: white;">Delete</button>
       </footer>
+    </div>
+  </div>
+
+  <!-- Global hidden file input -->
+  <input type="file" id="global-file-input" multiple style="display: none;">
+
+  <!-- Global drag-and-drop overlay -->
+  <div class="drag-drop-overlay" id="drag-drop-overlay" style="display: none;">
+    <div class="drag-drop-content">
+      <i data-lucide="upload-cloud" class="drag-icon"></i>
+      <h2 id="drag-drop-title">Drop files to upload</h2>
+      <p id="drag-drop-subtitle">Upload files to the selected directory</p>
+    </div>
+  </div>
+
+  <!-- Floating Upload Manager -->
+  <div class="upload-manager" id="upload-manager" style="display: none;">
+    <header class="upload-manager-header" id="upload-manager-header">
+      <span class="upload-manager-title">
+        <span id="upload-manager-icon-container">
+          <i data-lucide="loader" class="spinner-icon"></i>
+        </span>
+        <span id="upload-manager-text">Uploading files...</span>
+      </span>
+      <div class="upload-manager-controls">
+        <button id="upload-minimize-btn" class="icon-btn header-control-btn" title="Minimize">
+          <i data-lucide="minus"></i>
+        </button>
+        <button id="upload-close-btn" class="icon-btn header-control-btn" title="Close & Clear">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+    </header>
+    <div class="upload-manager-body" id="upload-manager-body">
+      <ul class="upload-list" id="upload-list">
+        <!-- Dynamic upload item rows -->
+      </ul>
     </div>
   </div>
 

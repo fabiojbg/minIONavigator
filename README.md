@@ -18,6 +18,7 @@ It offers a premium, responsive web interface with a dark theme (Dark Theme), fo
 - **Secure File Management**:
   - **Edit in Popup**: Allows editing text/markdown files directly in a popup/modal using CodeMirror. Includes a dropdown supporting 5 color themes (*Dracula*, *Monokai*, *Material Darker*, *Nord*, *Eclipse*) persisted in `localStorage`.
   - **Deletion**: Allows permanently deleting files or folders recursively directly in the sidebar (with a confirmation modal to prevent accidents).
+  - **Sequential File Uploads (Drag & Drop)**: Allows uploading single or multiple files by dragging them over the window or clicking the upload button. Displays a beautiful floating panel showing sequential progress bars, and surgically refreshes the modified directories in the treeview on completion.
 - **Interactive Mermaid Diagrams**:
   - Renders ` ```mermaid ` code blocks directly as SVG in the document body.
   - Clicking on the diagram opens a **fullscreen popup** with advanced **Pan (drag)** and **Zoom (mouse wheel)** capabilities using the `Panzoom` library.

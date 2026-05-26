@@ -89,6 +89,15 @@ The backend is built in Node.js with the **Express** framework and uses the offi
   - Converts the received content string into a UTF-8 buffer.
   - Saves the file in MinIO using the `putObject` method, replacing the previous file.
 
+#### 5. Upload File: `POST /api/upload`
+- **Request Body (Multipart Form-Data)**:
+  - `file`: The file data stream to upload.
+  - `bucket` (required): The destination bucket name.
+  - `path` (required): The full destination path (including virtual folders and filename).
+- **Business Rules**:
+  - Receives standard file uploads and parses them using the `multer` middleware in memory.
+  - Saves the parsed file buffer directly to MinIO using `putObject`, preserving folder prefixes and replacing existing files with the same name.
+
 ---
 
 ## 5. Frontend Architecture (`public/`)
@@ -166,6 +175,7 @@ Text and code file viewing utilizes modern syntax coloring engines:
 The application allows modifying and removing files under secure rules:
 - **Text Editing**: Takes place in a responsive modal that loads an editable CodeMirror instance. Allows changing the content and dynamically switching between 5 theme options (*Dracula*, *Monokai*, *Material Darker*, *Nord*, *Eclipse*), saving preferences in the user's `localStorage`. Upon saving, changes are persisted to the backend and the viewing panel is reloaded instantly.
 - **Deletion**: Triggered via quick action buttons (`.node-actions`) that appear on hover over the sidebar tree (protecting main buckets). Displays a confirmation modal. Once successfully completed, surgically reloads only the affected parent directory of the tree, preserving the expanded state of other branches. If the deleted file was being viewed in the reading panel, the system clears the screen, redirecting to the welcome card.
+- **File Uploads**: Allows uploading single or multiple files to the currently selected bucket and folder path. Supports standard file inputs (triggered from a cloud upload icon in the sidebar) and drag-and-drop actions globally over the window. Displays a full-screen drag-and-drop overlay with destination path indicators. Integrates a bottom-right floating Upload Manager with individual real-time progress bars. Uploads run sequentially, tracking progress and status. On completion, it surgically refreshes only the affected folder tree nodes.
 
 ---
 
