@@ -30,7 +30,13 @@ minIONavigator/
 └── public/                     # Static frontend
     ├── index.html              # Main layout and CDN imports
     ├── style.css               # Dark theme and Markdown/Mermaid styling
-    └── app.js                  # Splitter logic, treeview, and viewers
+    ├── app.js                  # Main entry point and orchestrator
+    └── js/                     # Modular sub-components (ES Modules)
+        ├── splitter.js         # Splitter/resize logic
+        ├── treeview.js         # Sidebar folder navigation & actions
+        ├── viewers.js          # File preview renderers (Markdown, Mermaid, CodeMirror)
+        ├── modals.js           # Edit/delete/zoom overlays
+        └── upload.js           # Sequential drag-and-drop uploader
 ```
 
 ---
@@ -130,9 +136,14 @@ The navigation component operates lazily (**lazy loading**):
    - A single-click on a file node highlights it visually (adds class `.active`) and triggers the `loadFile` function.
 
 ### 5.4 Extensible Viewer Architecture
-The application uses an ES Module script format (`type="module"`) and encapsulates all application logic and state inside the `MinIONavigator` class.
+The application uses an ES Module script format (`type="module"`), where `public/app.js` serves as the entry point and state orchestrator. The main class `MinIONavigator` coordinates the state and instantiates modular sub-components located in the `public/js/` folder:
+- **Splitter** (`splitter.js`): sidebar resizing.
+- **Treeview** (`treeview.js`): directory navigation hierarchy, node rendering, and tree refreshing.
+- **ViewerManager** (`viewers.js`): file content preview renderers.
+- **ModalManager** (`modals.js`): modal overlays (Mermaid zoom/pan, text file editor, delete confirmation).
+- **UploadManager** (`upload.js`): file upload queue and sequential uploads.
 
-File rendering uses an extensible registration pattern defined inside the class constructor as `this.viewers`:
+File rendering uses an extensible registration pattern defined inside the `ViewerManager` class constructor as `this.viewers`:
 
 ```javascript
 this.viewers = [
