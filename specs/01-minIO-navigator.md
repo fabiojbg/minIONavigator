@@ -134,6 +134,9 @@ The navigation component operates lazily (**lazy loading**):
    - Rotates the `.node-arrow` by adding the `.expanded` class (turning the side arrow into a down arrow).
 4. **File Selection**:
    - A single-click on a file node highlights it visually (adds class `.active`) and triggers the `loadFile` function.
+5. **State Preservation**:
+   - When the user triggers a refresh, the system captures the currently expanded folders and the active selected node.
+   - It reloads the root nodes and then asynchronously re-expands the previously open folders layer by layer, ultimately restoring the user's navigational state and active selection.
 
 ### 5.4 Extensible Viewer Architecture
 The application uses an ES Module script format (`type="module"`), where `public/app.js` serves as the entry point and state orchestrator. The main class `MinIONavigator` coordinates the state and instantiates modular sub-components located in the `public/js/` folder:

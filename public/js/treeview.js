@@ -14,6 +14,8 @@ export class Treeview {
   }
 
   async loadRootNodes() {
+    const state = this.getTreeState();
+
     const treeContainer = document.getElementById('tree-container');
     const bucketNameSpan = document.getElementById('current-bucket-name');
     
@@ -54,6 +56,8 @@ export class Treeview {
       });
       treeContainer.appendChild(fragment);
       lucide.createIcons();
+
+      await this.restoreTreeState(state);
 
     } catch (err) {
       console.error('Erro ao carregar raiz:', err);
@@ -339,6 +343,87 @@ export class Treeview {
     }
 
     return Array.from(document.querySelectorAll('.tree-node.folder-node')).find(node => {
+      const nodePath = node.dataset.path || '';
+      const normalizedNodePath = nodePath.endsWith('/') ? nodePath.slice(0, -1) : nodePath;
+      return node.dataset.bucket === bucket && normalizedNodePath === normalizedPath;
+    });
+  }
+
+  getTreeState() {
+    const state = {
+      expanded: [],
+      active: null,
+      currentBucket: this.app.currentBucket,
+      currentFolder: this.app.currentFolder
+    };
+    
+    const allChildrenDivs = document.querySelectorAll('.tree-children');
+    allChildrenDivs.forEach(childrenDiv => {
+      if (childrenDiv.style.display === 'block') {
+        const node = childrenDiv.previousElementSibling;
+        if (node && node.dataset.bucket) {
+          state.expanded.push({
+            bucket: node.dataset.bucket,
+            path: node.dataset.path || ''
+          });
+        }
+      }
+    });
+
+    const activeNode = document.querySelector('.tree-node.active');
+    if (activeNode) {
+      state.active = {
+        bucket: activeNode.dataset.bucket,
+        path: activeNode.dataset.path || ''
+      };
+    }
+    
+    return state;
+  }
+
+  async restoreTreeState(state) {
+    if (!state) return;
+
+    if (state.expanded && state.expanded.length > 0) {
+      const sortedExpanded = state.expanded.sort((a, b) => {
+        const depthA = (a.path.match(/\//g) || []).length;
+        const depthB = (b.path.match(/\//g) || []).length;
+        return depthA - depthB;
+      });
+
+      for (const item of sortedExpanded) {
+        const node = this.findFolderNode(item.bucket, item.path);
+        if (node) {
+          const childrenDiv = node.nextElementSibling;
+          if (childrenDiv && childrenDiv.style.display !== 'block') {
+             await this.toggleFolder(node, childrenDiv);
+          }
+        }
+      }
+    }
+
+    if (state.active) {
+      const activeNode = this.findNode(state.active.bucket, state.active.path);
+      if (activeNode) {
+        document.querySelectorAll('.tree-node.active').forEach(el => el.classList.remove('active'));
+        activeNode.classList.add('active');
+        
+        this.app.currentBucket = state.currentBucket;
+        this.app.currentFolder = state.currentFolder;
+      }
+    }
+  }
+
+  findNode(bucket, path) {
+    const normalizedPath = path.endsWith('/') && path !== '' ? path.slice(0, -1) : path;
+    
+    if (!normalizedPath) {
+      return Array.from(document.querySelectorAll('.tree-node')).find(node => {
+        return node.dataset.bucket === bucket && (!node.dataset.path || node.dataset.path === '');
+      });
+    }
+
+    return Array.from(document.querySelectorAll('.tree-node')).find(node => {
       const nodePath = node.dataset.path || '';
       const normalizedNodePath = nodePath.endsWith('/') ? nodePath.slice(0, -1) : nodePath;
       return node.dataset.bucket === bucket && normalizedNodePath === normalizedPath;

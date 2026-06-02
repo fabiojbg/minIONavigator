@@ -9,7 +9,7 @@ It offers a premium, responsive web interface with a dark theme (Dark Theme), fo
 
 ## Key Features
 
-- **Dynamic Sidebar Treeview (Lazy-Loaded)**: Loads folders on demand as the user navigates. Folders are displayed before files, and everything is sorted alphabetically.
+- **Dynamic Sidebar Treeview (Lazy-Loaded)**: Loads folders on demand as the user navigates. Folders are displayed before files, and everything is sorted alphabetically. **State Preservation**: The tree automatically remembers and restores your expanded folders and active selection when you refresh the view.
 - **Flexible Splitter**: Allows adjusting the width of the navigation sidebar by dragging the border with the mouse.
 - **Extensible File Viewer**:
   - **Markdown (`.md`)**: Rendered in clean and secure HTML (via `marked` and `DOMPurify`), with syntax highlighting in code blocks via **Highlight.js**.
