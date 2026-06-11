@@ -9,7 +9,8 @@ The application is designed to provide quick and interactive viewing of project 
 ## 1. Project Specifications
 The specifications are located in the `specs/` folder. The numeric prefix, such as `01-` for example, indicates the order in which the specifications were created.
 
-* **specs/01-minIO-navigator.md**: The initial specifications of this project.
+* **specs/01-minIO-navigator.md**: The main specifications of this project.
+* **specs/02-manager.md**: A windows dektop app to start and stop the app service.
 * **README.md**: read this file to understand and know how to use the project
 
 These specifications must be updated whenever any change requires them to be updated.

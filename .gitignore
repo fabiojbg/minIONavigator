@@ -161,3 +161,10 @@ app-deploy/
 production_artifacts/
 .app_data/
 .clinerules/
+
+
+# .NET
+obj/
+bin/
+debug/
+release/

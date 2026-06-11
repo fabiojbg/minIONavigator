@@ -25,8 +25,10 @@ minIONavigator/
 ├── docker-compose.yml          # Container orchestration (App + local MinIO)
 ├── package.json                # Dependency management
 ├── server.js                   # Application backend (Express + MinIO SDK)
+├── manager/                    # Windows Desktop Manager (C# / .NET 10.0)
 ├── specs/
-│   └── 01-minIO Navigator.md   # This specification file
+│   ├── 01-minIO-navigator.md   # Core application specifications
+│   └── 02-manager.md           # Desktop Manager specifications
 └── public/                     # Static frontend
     ├── index.html              # Main layout and CDN imports
     ├── style.css               # Dark theme and Markdown/Mermaid styling
@@ -203,23 +205,38 @@ The application allows modifying and removing files under secure rules:
 
 ---
 
-## 6. Containerization (Docker)
+## 6. Manager Desktop Interface (`manager/`)
+
+To simplify launching and running MinIO Navigator locally on Windows environments, the project includes a lightweight Windows Forms desktop client built with **C#** and **.NET 10.0**.
+
+For full design requirements, architecture patterns, and component details, see the dedicated specification:
+👉 **[02-manager.md](file:///d:/MyProjs.Github/minIONavigator/specs/02-manager.md)**
+
+### 6.1 Key Features Summary
+- **Single-instance Mutex**: Limits executions to a single instance using system-wide mutex and event handling.
+- **Process Management**: Safely executes the Express backend silently, terminating its entire process tree to prevent leaked processes on close.
+- **Configuration Loading**: Synchronizes application ports dynamically by reading the workspace `.env` file.
+- **Tray Integration**: Minimizes to the Windows System Tray with a dedicated right-click context menu and status-colored taskbar icons.
+
+---
+
+## 7. Containerization (Docker)
 
 To streamline testing, deployment, and development, the project includes Docker configuration.
 
-### 6.1 Dockerfile
+### 7.1 Dockerfile
 The application uses a single-stage `Dockerfile` based on `node:20-alpine`:
 - Copies the `package.json` and `package-lock.json`.
 - Runs `npm ci --omit=dev` to install only production dependencies.
 - Copies the application source files (`server.js`, `public/`).
 - Exposes port `4000` and configures the start command `npm start`.
 
-### 6.2 Docker Compose (`docker-compose.yml`)
+### 7.2 Docker Compose (`docker-compose.yml`)
 The orchestration file sets up a self-contained local environment containing two services:
 1. **`minio`**: A local MinIO S3 API-compatible service running on port `9000` (API) and port `9001` (Console) with a persistent volume (`minio_data`).
 2. **`app`**: The MinIO Navigator application container. It builds from the local directory and exposes port `4000` to the host.
 
-### 6.3 Networking & Connections
+### 7.3 Networking & Connections
 - Within the Docker network, the application service resolves the hostname `minio` to the containerized MinIO instance.
 - **Connection endpoint**: `MINIO_ENDPOINT` is configured to `minio:9000` inside the `docker-compose.yml`.
 - If developers wish to connect the containerized app to a MinIO instance running on their host machine, they should configure `MINIO_ENDPOINT` to `host.docker.internal:9000` (on Windows/macOS).

@@ -95,6 +95,22 @@ npm start
 npm run dev
 ```
 
+### Windows Desktop Manager (C# .NET 10.0)
+The project includes a lightweight desktop controller inside the `manager/` folder. It provides a simple GUI with a single button to start/stop the server silently and minimizes directly to the Windows System Tray.
+
+To build and run the desktop manager:
+1. Ensure you have **.NET 10 SDK** installed.
+2. Navigate to the `manager` directory and run the application:
+   ```powershell
+   cd manager
+   dotnet run
+   ```
+Features:
+- **Single Action Button**: Easily toggle the Node.js server status ("Iniciar" / "Parar").
+- **Auto Port Loader**: Reads the `PORT` from your `.env` configuration file dynamically and provides a direct clickable link to open it in your default browser.
+- **Minimize to Tray**: Minimizing the window will hide it and place a Notify Icon in the system tray, keeping your taskbar clean.
+- **Process Protection**: Automatically and cleanly terminates the whole Node.js process tree on exit to prevent orphaned background processes.
+
 ### For advanced users: With Docker Compose
 To run MinIO Navigator alongside a local pre-configured MinIO server instance in docker containers:
 ```bash
