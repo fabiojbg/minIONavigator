@@ -149,34 +149,44 @@ export class Treeview {
     label.textContent = item.name;
     node.appendChild(label);
 
-    if (!item.isBucket) {
-      const actionsContainer = document.createElement('div');
-      actionsContainer.className = 'node-actions';
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'node-actions';
 
-      if (!item.isDir) {
-        const ext = item.name.split('.').pop().toLowerCase();
-        const isEditable = ['md', 'txt', 'json', 'log', 'xml', 'js', 'py', 'html', 'css', 'yaml', 'yml', 'env', 'conf', 'ini'].includes(ext);
-        if (isEditable) {
-          const editAction = document.createElement('button');
-          editAction.className = 'node-action-btn edit';
-          editAction.title = 'Edit';
-          editAction.innerHTML = '<i data-lucide="edit-3"></i>';
-          editAction.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const url = `/api/file?bucket=${encodeURIComponent(item.bucket)}&path=${encodeURIComponent(item.path)}`;
-            try {
-              const res = await fetch(url);
-              if (!res.ok) throw new Error(`Error fetching file: ${res.statusText}`);
-              const content = await res.text();
-              this.app.modalManager.openEditModal(item.bucket, item.path, item.name, content);
-            } catch (err) {
-              alert(err.message);
-            }
-          });
-          actionsContainer.appendChild(editAction);
-        }
+    if (item.isDir) {
+      const downloadAction = document.createElement('button');
+      downloadAction.className = 'node-action-btn download';
+      downloadAction.title = 'Download folder as ZIP';
+      downloadAction.innerHTML = '<i data-lucide="download-cloud"></i>';
+      downloadAction.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.downloadFolder(item.bucket, item.path);
+      });
+      actionsContainer.appendChild(downloadAction);
+    } else {
+      const ext = item.name.split('.').pop().toLowerCase();
+      const isEditable = ['md', 'txt', 'json', 'log', 'xml', 'js', 'py', 'html', 'css', 'yaml', 'yml', 'env', 'conf', 'ini'].includes(ext);
+      if (isEditable) {
+        const editAction = document.createElement('button');
+        editAction.className = 'node-action-btn edit';
+        editAction.title = 'Edit';
+        editAction.innerHTML = '<i data-lucide="edit-3"></i>';
+        editAction.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const url = `/api/file?bucket=${encodeURIComponent(item.bucket)}&path=${encodeURIComponent(item.path)}`;
+          try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`Error fetching file: ${res.statusText}`);
+            const content = await res.text();
+            this.app.modalManager.openEditModal(item.bucket, item.path, item.name, content);
+          } catch (err) {
+            alert(err.message);
+          }
+        });
+        actionsContainer.appendChild(editAction);
       }
+    }
 
+    if (!item.isBucket) {
       const deleteAction = document.createElement('button');
       deleteAction.className = 'node-action-btn delete';
       deleteAction.title = 'Delete';
@@ -186,7 +196,9 @@ export class Treeview {
         this.app.modalManager.promptDelete(node);
       });
       actionsContainer.appendChild(deleteAction);
+    }
 
+    if (actionsContainer.children.length > 0) {
       node.appendChild(actionsContainer);
     }
 
@@ -428,5 +440,25 @@ export class Treeview {
       const normalizedNodePath = nodePath.endsWith('/') ? nodePath.slice(0, -1) : nodePath;
       return node.dataset.bucket === bucket && normalizedNodePath === normalizedPath;
     });
+  }
+
+  downloadFolder(bucket, path) {
+    if (!bucket) return;
+    
+    if (this.app.modalManager && typeof this.app.modalManager.showToast === 'function') {
+      this.app.modalManager.showToast('Preparing ZIP archive...');
+    }
+
+    const url = `/api/download-folder?bucket=${encodeURIComponent(bucket)}&prefix=${encodeURIComponent(path || '')}`;
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    
+    setTimeout(() => {
+      document.body.removeChild(link);
+    }, 100);
   }
 }

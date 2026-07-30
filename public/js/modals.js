@@ -314,4 +314,33 @@ export class ModalManager {
     document.getElementById('error-view').style.display = 'none';
     document.getElementById('edit-btn').style.display = 'none';
   }
+
+  showToast(message) {
+    let toast = document.querySelector('.toast-notification');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.className = 'toast-notification';
+      toast.innerHTML = `
+        <i data-lucide="info" class="toast-icon"></i>
+        <span class="toast-message"></span>
+      `;
+      document.body.appendChild(toast);
+    }
+    
+    const messageSpan = toast.querySelector('.toast-message');
+    messageSpan.textContent = message;
+    
+    lucide.createIcons();
+    
+    setTimeout(() => {
+      toast.classList.add('show');
+    }, 10);
+    
+    if (this._toastTimeout) {
+      clearTimeout(this._toastTimeout);
+    }
+    this._toastTimeout = setTimeout(() => {
+      toast.classList.remove('show');
+    }, 3000);
+  }
 }

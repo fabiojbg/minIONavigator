@@ -3,6 +3,7 @@ const express = require('express');
 const Minio = require('minio');
 const path = require('path');
 const multer = require('multer');
+const { ZipArchive } = require('archiver');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -169,6 +170,87 @@ app.get('/api/file', async (req, res) => {
   } catch (err) {
     console.error(`Error retrieving object ${filePath}:`, err);
     res.status(404).send('File not found: ' + err.message);
+  }
+});
+
+// Endpoint to download a folder (or bucket) recursively as a ZIP file
+app.get('/api/download-folder', async (req, res) => {
+  const bucket = req.query.bucket || defaultBucket;
+  const prefix = req.query.prefix || '';
+
+  if (!bucket) {
+    return res.status(400).send('Bucket is required');
+  }
+
+  // Determine ZIP file name
+  let zipName = bucket;
+  if (prefix) {
+    const normalizedPrefix = prefix.endsWith('/') ? prefix.slice(0, -1) : prefix;
+    const parts = normalizedPrefix.split('/');
+    zipName = parts[parts.length - 1] || bucket;
+  }
+  zipName = `${zipName}.zip`;
+
+  try {
+    const archive = new ZipArchive({ zlib: { level: 9 } });
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(zipName)}"`);
+
+    archive.pipe(res);
+
+    const objectsList = [];
+    const stream = minioClient.listObjectsV2(bucket, prefix, true);
+
+    stream.on('data', (obj) => {
+      if (obj.name && !obj.name.endsWith('/')) {
+        objectsList.push(obj.name);
+      }
+    });
+
+    stream.on('error', (err) => {
+      console.error('Error listing objects for zip:', err);
+      archive.destroy(err);
+    });
+
+    stream.on('end', async () => {
+      try {
+        for (const name of objectsList) {
+          try {
+            const fileStream = await minioClient.getObject(bucket, name);
+            const relativePath = prefix ? name.substring(prefix.length) : name;
+
+            await new Promise((resolve, reject) => {
+              fileStream.on('error', reject);
+
+              const onEntry = (entry) => {
+                if (entry.name === relativePath) {
+                  archive.off('entry', onEntry);
+                  resolve();
+                }
+              };
+
+              archive.on('entry', onEntry);
+              archive.append(fileStream, { name: relativePath });
+            });
+          } catch (fileErr) {
+            console.error(`Error appending file ${name} to ZIP:`, fileErr);
+            throw fileErr;
+          }
+        }
+
+        await archive.finalize();
+      } catch (err) {
+        console.error('Error during zip generation:', err);
+        archive.destroy(err);
+      }
+    });
+
+  } catch (err) {
+    console.error('Error generating folder ZIP:', err);
+    if (!res.headersSent) {
+      res.status(500).send('Failed to generate ZIP: ' + err.message);
+    }
   }
 });
 
